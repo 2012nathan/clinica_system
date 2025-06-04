@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Buscar Paciente - Exames Laboratoriais{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-ultraclin">Buscar Paciente</h2>
+            <p class="text-muted">Busque um paciente para gerenciar seus exames laboratoriais</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('laboratorio.exames_laboratoriais') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" action="{{ url_for('laboratorio.buscar_paciente_laboratorio') }}">
+                <div class="row mb-3">
+                    <div class="col-md-8 mx-auto">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" id="cpf" name="cpf" placeholder="Digite o CPF do paciente" required>
+                            <button type="submit" class="btn btn-ultraclin">Buscar</button>
+                        </div>
+                        <div class="form-text text-center">Digite o CPF do paciente sem pontos ou traços.</div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="text-center mt-4">
+                <p>Ou</p>
+                <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-outline-ultraclin">
+                    <i class="bi bi-plus-circle"></i> Cadastrar Novo Exame
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Instruções</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-search text-ultraclin" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-center">Busque o Paciente</h5>
+                    <p class="text-center">Digite o CPF do paciente para encontrá-lo no sistema.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-list-check text-ultraclin" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-center">Visualize os Exames</h5>
+                    <p class="text-center">Veja todos os exames laboratoriais do paciente.</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center mb-3">
+                        <i class="bi bi-file-earmark-plus text-ultraclin" style="font-size: 2rem;"></i>
+                    </div>
+                    <h5 class="text-center">Gerencie Resultados</h5>
+                    <p class="text-center">Anexe ou atualize resultados de exames laboratoriais.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('#cpf').mask('000.000.000-00');
+        });
+    </script>
+</body>
+</html>

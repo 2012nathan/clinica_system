@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}Agendar Consulta - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Agendar Consulta</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Agendar Consulta</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulário de Agendamento -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-plus me-2"></i>
+                        Nova Consulta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('paciente.agendar_consulta') }}" id="formAgendarConsulta">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="especialidade" class="form-label">Especialidade</label>
+                                <select class="form-select" id="especialidade" name="especialidade" required>
+                                    <option value="">Selecione uma especialidade</option>
+                                    {% for especialidade in especialidades %}
+                                    <option value="{{ especialidade.id }}">{{ especialidade.nome }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="profissional" class="form-label">Profissional</label>
+                                <select class="form-select" id="profissional" name="profissional" required disabled>
+                                    <option value="">Selecione primeiro uma especialidade</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="data" class="form-label">Data</label>
+                                <input type="date" class="form-control" id="data" name="data" required disabled>
+                                <small class="form-text text-muted">Selecione primeiro um profissional</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="horario" class="form-label">Horário</label>
+                                <select class="form-select" id="horario" name="horario" required disabled>
+                                    <option value="">Selecione primeiro uma data</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">Motivo da Consulta</label>
+                            <textarea class="form-control" id="motivo" name="motivo" rows="3" placeholder="Descreva brevemente o motivo da consulta"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="convenio" class="form-label">Convênio</label>
+                            <select class="form-select" id="convenio" name="convenio">
+                                <option value="particular">Particular</option>
+                                {% if paciente.convenio %}
+                                <option value="{{ paciente.convenio }}" selected>{{ paciente.convenio }}</option>
+                                {% endif %}
+                                <option value="unimed">Unimed</option>
+                                <option value="amil">Amil</option>
+                                <option value="bradesco">Bradesco Saúde</option>
+                                <option value="sulamerica">SulAmérica</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="divNumeroConvenio" {% if not paciente.convenio or paciente.convenio == 'particular' %}style="display: none;"{% endif %}>
+                            <label for="numero_convenio" class="form-label">Número do Convênio</label>
+                            <input type="text" class="form-control" id="numero_convenio" name="numero_convenio" value="{{ paciente.numero_convenio }}">
+                        </div>
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="termos" name="termos" required>
+                            <label class="form-check-label" for="termos">
+                                Concordo com os <a href="#" data-bs-toggle="modal" data-bs-target="#termosModal">termos e condições</a> de agendamento
+                            </label>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="btnAgendar" disabled>
+                                <i class="bi bi-calendar-check me-1"></i>
+                                Confirmar Agendamento
+                            </button>
+                            <a href="{{ url_for('paciente.minhas_consultas') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Voltar para Minhas Consultas
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Informações Importantes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Política de Cancelamento</strong>
+                        <p class="mb-0 mt-2">Cancelamentos devem ser realizados com no mínimo 24 horas de antecedência para evitar cobrança de taxa.</p>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-clock me-2"></i>
+                        <strong>Chegada Antecipada</strong>
+                        <p class="mb-0 mt-2">Recomendamos chegar com 15 minutos de antecedência para procedimentos administrativos.</p>
+                    </div>
+                    <div class="alert alert-primary">
+                        <i class="bi bi-file-text me-2"></i>
+                        <strong>Documentos Necessários</strong>
+                        <p class="mb-0 mt-2">Traga documento de identidade, cartão do convênio e exames anteriores relacionados à consulta.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-telephone me-2"></i>
+                        Precisa de Ajuda?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Entre em contato com nossa central de atendimento:</p>
+                    <p class="mb-2"><i class="bi bi-telephone-fill me-2"></i> (96) 98114-4626</p>
+                    <p class="mb-0"><i class="bi bi-envelope-fill me-2"></i> atendimento@ultraclin.com.br</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Termos e Condições -->
+<div class="modal fade" id="termosModal" tabindex="-1" aria-labelledby="termosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termosModalLabel">Termos e Condições de Agendamento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Agendamento de Consultas</h6>
+                <p>Ao agendar uma consulta, o paciente concorda em comparecer no horário marcado ou avisar com antecedência mínima de 24 horas em caso de impossibilidade.</p>
+                
+                <h6>2. Política de Cancelamento</h6>
+                <p>Cancelamentos devem ser realizados com no mínimo 24 horas de antecedência. Cancelamentos com menos de 24 horas ou não comparecimento podem estar sujeitos a cobrança de taxa administrativa.</p>
+                
+                <h6>3. Documentação</h6>
+                <p>É responsabilidade do paciente trazer todos os documentos necessários para a consulta, incluindo documento de identidade, cartão do convênio e exames anteriores relacionados.</p>
+                
+                <h6>4. Convênios</h6>
+                <p>A UltraClin não se responsabiliza por procedimentos não cobertos pelo convênio do paciente. É responsabilidade do paciente verificar a cobertura junto ao seu convênio antes do agendamento.</p>
+                
+                <h6>5. Horários</h6>
+                <p>Recomendamos chegar com 15 minutos de antecedência para procedimentos administrativos. Atrasos superiores a 15 minutos podem resultar no cancelamento da consulta, a critério do profissional.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="document.getElementById('termos').checked = true; verificarFormulario();">Concordo</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const especialidadeSelect = document.getElementById('especialidade');
+        const profissionalSelect = document.getElementById('profissional');
+        const dataInput = document.getElementById('data');
+        const horarioSelect = document.getElementById('horario');
+        const convenioSelect = document.getElementById('convenio');
+        const divNumeroConvenio = document.getElementById('divNumeroConvenio');
+        const termosCheck = document.getElementById('termos');
+        const btnAgendar = document.getElementById('btnAgendar');
+        
+        // Função para verificar se o formulário está completo
+        window.verificarFormulario = function() {
+            if (especialidadeSelect.value && 
+                profissionalSelect.value && 
+                dataInput.value && 
+                horarioSelect.value && 
+                termosCheck.checked) {
+                btnAgendar.disabled = false;
+            } else {
+                btnAgendar.disabled = true;
+            }
+        };
+        
+        // Evento para especialidade
+        especialidadeSelect.addEventListener('change', function() {
+            profissionalSelect.innerHTML = '<option value="">Carregando...</option>';
+            profissionalSelect.disabled = true;
+            dataInput.disabled = true;
+            horarioSelect.disabled = true;
+            
+            if (this.value) {
+                // Simulação de chamada AJAX para buscar profissionais
+                setTimeout(() => {
+                    // Aqui seria o resultado da chamada AJAX
+                    profissionalSelect.innerHTML = `
+                        <option value="">Selecione um profissional</option>
+                        <option value="1">Dr. João Silva</option>
+                        <option value="2">Dra. Maria Oliveira</option>
+                        <option value="3">Dr. Carlos Santos</option>
+                    `;
+                    profissionalSelect.disabled = false;
+                }, 500);
+            } else {
+                profissionalSelect.innerHTML = '<option value="">Selecione primeiro uma especialidade</option>';
+            }
+            
+            verificarFormulario();
+        });
+        
+        // Evento para profissional
+        profissionalSelect.addEventListener('change', function() {
+            dataInput.disabled = true;
+            horarioSelect.disabled = true;
+            
+            if (this.value) {
+                dataInput.disabled = false;
+                
+                // Definir data mínima como hoje
+                const hoje = new Date();
+                const ano = hoje.getFullYear();
+                const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+                const dia = String(hoje.getDate()).padStart(2, '0');
+                dataInput.min = `${ano}-${mes}-${dia}`;
+                
+                // Definir data máxima como 3 meses a partir de hoje
+                const dataMaxima = new Date();
+                dataMaxima.setMonth(dataMaxima.getMonth() + 3);
+                const anoMax = dataMaxima.getFullYear();
+                const mesMax = String(dataMaxima.getMonth() + 1).padStart(2, '0');
+                const diaMax = String(dataMaxima.getDate()).padStart(2, '0');
+                dataInput.max = `${anoMax}-${mesMax}-${diaMax}`;
+            } else {
+                dataInput.value = '';
+            }
+            
+            verificarFormulario();
+        });
+        
+        // Evento para data
+        dataInput.addEventListener('change', function() {
+            horarioSelect.innerHTML = '<option value="">Carregando...</option>';
+            horarioSelect.disabled = true;
+            
+            if (this.value) {
+                // Simulação de chamada AJAX para buscar horários disponíveis
+                setTimeout(() => {
+                    // Aqui seria o resultado da chamada AJAX
+                    horarioSelect.innerHTML = `
+                        <option value="">Selecione um horário</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                    `;
+                    horarioSelect.disabled = false;
+                }, 500);
+            } else {
+                horarioSelect.innerHTML = '<option value="">Selecione primeiro uma data</option>';
+            }
+            
+            verificarFormulario();
+        });
+        
+        // Evento para horário
+        horarioSelect.addEventListener('change', verificarFormulario);
+        
+        // Evento para termos
+        termosCheck.addEventListener('change', verificarFormulario);
+        
+        // Evento para convênio
+        convenioSelect.addEventListener('change', function() {
+            if (this.value === 'particular') {
+                divNumeroConvenio.style.display = 'none';
+            } else {
+                divNumeroConvenio.style.display = 'block';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Especialidades - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Gerenciamento de Especialidades{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Gerenciamento de Especialidades</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('admin.nova_especialidade') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nova Especialidade
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                            <th>Profissionais</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for especialidade in especialidades %}
+                        <tr>
+                            <td>{{ especialidade.id }}</td>
+                            <td>{{ especialidade.nome }}</td>
+                            <td>{{ especialidade.descricao|truncate(50) }}</td>
+                            <td>{{ especialidade.profissionais|length }}</td>
+                            <td>
+                                <a href="{{ url_for('admin.editar_especialidade', id=especialidade.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {% if not especialidade.profissionais %}
+                                <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ especialidade.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-sm btn-danger" disabled title="Não é possível excluir especialidade com profissionais vinculados">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        <!-- Modal de Confirmação de Exclusão -->
+                        <div class="modal fade" id="deleteModal{{ especialidade.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ especialidade.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel{{ especialidade.id }}">Confirmar Exclusão</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Tem certeza que deseja excluir a especialidade <strong>{{ especialidade.nome }}</strong>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        <form action="{{ url_for('admin.excluir_especialidade', id=especialidade.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-danger">Excluir</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if not especialidades %}
+            <div class="alert alert-info">
+                Nenhuma especialidade cadastrada. Clique em "Nova Especialidade" para adicionar.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

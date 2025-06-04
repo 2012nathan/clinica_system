@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Alterar Senha - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Alterar Senha</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.meus_dados') }}">Meus Dados</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Alterar Senha</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulário de Alteração de Senha -->
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-key me-2"></i>
+                        Alterar Senha
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('paciente.alterar_senha') }}" id="formAlterarSenha">
+                        <div class="mb-3">
+                            <label for="senha_atual" class="form-label">Senha Atual</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="senha_atual">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nova_senha" class="form-label">Nova Senha</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="nova_senha">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">
+                                A senha deve ter pelo menos 8 caracteres.
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="confirmar_senha" class="form-label">Confirmar Nova Senha</label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                                <button class="btn btn-outline-secondary toggle-password" type="button" data-target="confirmar_senha">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Salvar Nova Senha
+                            </button>
+                            <a href="{{ url_for('paciente.meus_dados') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar/ocultar senha
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        });
+        
+        // Validação do formulário
+        const form = document.getElementById('formAlterarSenha');
+        form.addEventListener('submit', function(event) {
+            const novaSenha = document.getElementById('nova_senha').value;
+            const confirmarSenha = document.getElementById('confirmar_senha').value;
+            
+            if (novaSenha.length < 8) {
+                event.preventDefault();
+                alert('A senha deve ter pelo menos 8 caracteres.');
+                return;
+            }
+            
+            if (novaSenha !== confirmarSenha) {
+                event.preventDefault();
+                alert('As senhas não coincidem.');
+                return;
+            }
+        });
+    });
+</script>
+{% endblock %}

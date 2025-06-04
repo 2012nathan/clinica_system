@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}Minhas Consultas - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Minhas Consultas</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Minhas Consultas</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{{ url_for('paciente.agendar_consulta') }}" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus me-1"></i>
+                        Nova Consulta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('paciente.minhas_consultas') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="todos" {% if request.args.get('status') == 'todos' or not request.args.get('status') %}selected{% endif %}>Todos</option>
+                                <option value="agendado" {% if request.args.get('status') == 'agendado' %}selected{% endif %}>Agendadas</option>
+                                <option value="realizado" {% if request.args.get('status') == 'realizado' %}selected{% endif %}>Realizadas</option>
+                                <option value="cancelado" {% if request.args.get('status') == 'cancelado' %}selected{% endif %}>Canceladas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search me-1"></i>
+                                Filtrar
+                            </button>
+                            <a href="{{ url_for('paciente.minhas_consultas') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="consultasTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="todas-tab" data-bs-toggle="tab" data-bs-target="#todas" type="button" role="tab" aria-controls="todas" aria-selected="true">
+                        Todas
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="agendadas-tab" data-bs-toggle="tab" data-bs-target="#agendadas" type="button" role="tab" aria-controls="agendadas" aria-selected="false">
+                        Agendadas
+                        {% if consultas_agendadas and consultas_agendadas|length > 0 %}
+                        <span class="badge bg-primary ms-1">{{ consultas_agendadas|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="realizadas-tab" data-bs-toggle="tab" data-bs-target="#realizadas" type="button" role="tab" aria-controls="realizadas" aria-selected="false">
+                        Realizadas
+                        {% if consultas_realizadas and consultas_realizadas|length > 0 %}
+                        <span class="badge bg-success ms-1">{{ consultas_realizadas|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="canceladas-tab" data-bs-toggle="tab" data-bs-target="#canceladas" type="button" role="tab" aria-controls="canceladas" aria-selected="false">
+                        Canceladas
+                        {% if consultas_canceladas and consultas_canceladas|length > 0 %}
+                        <span class="badge bg-danger ms-1">{{ consultas_canceladas|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="consultasTabContent">
+        <!-- Todas as Consultas -->
+        <div class="tab-pane fade show active" id="todas" role="tabpanel" aria-labelledby="todas-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-week me-2"></i>
+                        Todas as Consultas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if consultas and consultas|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Especialidade</th>
+                                    <th>Profissional</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consulta in consultas %}
+                                <tr>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%d/%m/%Y') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%H:%M') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</td>
+                                    <td>
+                                        {% if consulta.status == 'agendado' %}
+                                        <span class="badge bg-primary">Agendada</span>
+                                        {% elif consulta.status == 'realizado' %}
+                                        <span class="badge bg-success">Realizada</span>
+                                        {% elif consulta.status == 'cancelado' %}
+                                        <span class="badge bg-danger">Cancelada</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ consulta.status|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.consulta_detalhes', id=consulta.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        {% if consulta.status == 'agendado' %}
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelarModal" data-consulta-id="{{ consulta.id }}">
+                                            <i class="bi bi-x-circle"></i> Cancelar
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhuma consulta encontrada com os filtros selecionados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultas Agendadas -->
+        <div class="tab-pane fade" id="agendadas" role="tabpanel" aria-labelledby="agendadas-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        Consultas Agendadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if consultas_agendadas and consultas_agendadas|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Especialidade</th>
+                                    <th>Profissional</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consulta in consultas_agendadas %}
+                                <tr>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%d/%m/%Y') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%H:%M') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.consulta_detalhes', id=consulta.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelarModal" data-consulta-id="{{ consulta.id }}">
+                                            <i class="bi bi-x-circle"></i> Cancelar
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Você não possui consultas agendadas no momento.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultas Realizadas -->
+        <div class="tab-pane fade" id="realizadas" role="tabpanel" aria-labelledby="realizadas-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Consultas Realizadas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if consultas_realizadas and consultas_realizadas|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Especialidade</th>
+                                    <th>Profissional</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consulta in consultas_realizadas %}
+                                <tr>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%d/%m/%Y') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%H:%M') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.consulta_detalhes', id=consulta.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        {% if consulta.documentos and consulta.documentos|length > 0 %}
+                                        <a href="{{ url_for('paciente.meus_documentos', consulta_id=consulta.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-file-earmark-text"></i> Documentos
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Você não possui consultas realizadas no período selecionado.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Consultas Canceladas -->
+        <div class="tab-pane fade" id="canceladas" role="tabpanel" aria-labelledby="canceladas-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Consultas Canceladas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if consultas_canceladas and consultas_canceladas|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th>Especialidade</th>
+                                    <th>Profissional</th>
+                                    <th>Motivo Cancelamento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consulta in consultas_canceladas %}
+                                <tr>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%d/%m/%Y') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.data_hora_inicio.strftime('%H:%M') if consulta.data_hora_inicio else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</td>
+                                    <td>{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</td>
+                                    <td>{{ consulta.motivo_cancelamento or 'Não informado' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.consulta_detalhes', id=consulta.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        <a href="{{ url_for('paciente.reagendar_consulta', id=consulta.id) }}" class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-calendar-plus"></i> Reagendar
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Você não possui consultas canceladas no período selecionado.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cancelamento -->
+<div class="modal fade" id="cancelarModal" tabindex="-1" aria-labelledby="cancelarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelarModalLabel">Cancelar Consulta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('paciente.cancelar_consulta') }}">
+                <div class="modal-body">
+                    <input type="hidden" id="consulta_id" name="consulta_id" value="">
+                    <p>Tem certeza que deseja cancelar esta consulta?</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Cancelamentos com menos de 24 horas de antecedência podem estar sujeitos a cobrança de taxa administrativa.
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo_cancelamento" class="form-label">Motivo do Cancelamento</label>
+                        <select class="form-select" id="motivo_cancelamento" name="motivo_cancelamento" required>
+                            <option value="">Selecione um motivo</option>
+                            <option value="Indisponibilidade de horário">Indisponibilidade de horário</option>
+                            <option value="Problema de saúde">Problema de saúde</option>
+                            <option value="Consulta remarcada">Consulta remarcada</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="divOutroMotivo" style="display: none;">
+                        <label for="outro_motivo" class="form-label">Especifique o Motivo</label>
+                        <textarea class="form-control" id="outro_motivo" name="outro_motivo" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ativar a aba correspondente ao status selecionado no filtro
+        const statusParam = new URLSearchParams(window.location.search).get('status');
+        if (statusParam) {
+            const tabMap = {
+                'agendado': 'agendadas-tab',
+                'realizado': 'realizadas-tab',
+                'cancelado': 'canceladas-tab',
+                'todos': 'todas-tab'
+            };
+            
+            const tabId = tabMap[statusParam];
+            if (tabId) {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                    const bsTab = new bootstrap.Tab(tab);
+                    bsTab.show();
+                }
+            }
+        }
+        
+        // Configurar modal de cancelamento
+        const cancelarModal = document.getElementById('cancelarModal');
+        if (cancelarModal) {
+            cancelarModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const consultaId = button.getAttribute('data-consulta-id');
+                document.getElementById('consulta_id').value = consultaId;
+            });
+        }
+        
+        // Mostrar/ocultar campo de outro motivo
+        const motivoSelect = document.getElementById('motivo_cancelamento');
+        const outroMotivoDiv = document.getElementById('divOutroMotivo');
+        
+        if (motivoSelect && outroMotivoDiv) {
+            motivoSelect.addEventListener('change', function() {
+                if (this.value === 'Outro') {
+                    outroMotivoDiv.style.display = 'block';
+                } else {
+                    outroMotivoDiv.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+# Arquivos de ambiente - NUNCA COMMITAR!
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# Arquivos de configuração com dados sensíveis
+config_local.py
+instance/
+secrets.py
+
+# Arquivos de banco de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Ambientes virtuais
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Uploads e arquivos temporários
+uploads/*
+!uploads/.gitkeep
+temp/
+tmp/
+
+# Certificados e chaves
+*.pem
+*.key
+*.crt
+*.cert
+
+# Backups
+*.bak
+*.backup

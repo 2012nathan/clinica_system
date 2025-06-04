@@ -1,0 +1,255 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes do Exame - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Detalhes do Exame</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.meus_exames') }}">Meus Exames</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{{ url_for('paciente.meus_exames') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Informações do Exame -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Informações do Exame
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Tipo de Exame</label>
+                            <p class="form-control-plaintext">{{ exame.tipo_exame }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Status</label>
+                            <p class="form-control-plaintext">
+                                {% if exame.status == 'pendente' %}
+                                <span class="badge bg-warning text-dark fs-6">Pendente</span>
+                                {% elif exame.status == 'coletado' %}
+                                <span class="badge bg-info fs-6">Coletado</span>
+                                {% elif exame.status == 'resultado_disponivel' %}
+                                <span class="badge bg-success fs-6">Resultado Disponível</span>
+                                {% else %}
+                                <span class="badge bg-secondary fs-6">{{ exame.status|capitalize }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Data de Realização</label>
+                            <p class="form-control-plaintext">{{ exame.data_realizacao.strftime('%d/%m/%Y') if exame.data_realizacao else 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Médico Solicitante</label>
+                            <p class="form-control-plaintext">{{ exame.medico_solicitante if exame.medico_solicitante else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    {% if exame.data_coleta %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Data da Coleta</label>
+                            <p class="form-control-plaintext">{{ exame.data_coleta.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        {% if exame.data_resultado %}
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Data do Resultado</label>
+                            <p class="form-control-plaintext">{{ exame.data_resultado.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if exame.descricao %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Descrição</label>
+                        <p class="form-control-plaintext">{{ exame.descricao }}</p>
+                    </div>
+                    {% endif %}
+                    {% if exame.observacoes %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Observações</label>
+                        <p class="form-control-plaintext">{{ exame.observacoes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if exame.status == 'resultado_disponivel' %}
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('paciente.visualizar_resultado', id=exame.id) }}" class="btn btn-success">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            Visualizar Resultado
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Timeline do Exame -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Histórico do Exame
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Exame Solicitado</h6>
+                                <p class="timeline-description">Exame foi solicitado pelo médico</p>
+                                <small class="text-muted">{{ exame.data_realizacao.strftime('%d/%m/%Y') if exame.data_realizacao else 'N/A' }}</small>
+                            </div>
+                        </div>
+                        
+                        {% if exame.status in ['coletado', 'resultado_disponivel'] %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Exame Coletado</h6>
+                                <p class="timeline-description">Material foi coletado para análise</p>
+                                <small class="text-muted">{{ exame.data_coleta.strftime('%d/%m/%Y') if exame.data_coleta else 'N/A' }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if exame.status == 'resultado_disponivel' %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="timeline-title">Resultado Disponível</h6>
+                                <p class="timeline-description">O resultado do exame está pronto para visualização</p>
+                                <small class="text-muted">{{ exame.data_resultado.strftime('%d/%m/%Y') if exame.data_resultado else 'N/A' }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Status do Exame
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if exame.status == 'pendente' %}
+                    <i class="bi bi-hourglass-split text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Pendente</h5>
+                    <p class="text-muted">Aguardando coleta do material</p>
+                    {% elif exame.status == 'coletado' %}
+                    <i class="bi bi-flask text-info" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Coletado</h5>
+                    <p class="text-muted">Material coletado, aguardando resultado</p>
+                    {% elif exame.status == 'resultado_disponivel' %}
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Resultado Disponível</h5>
+                    <p class="text-muted">Resultado pronto para visualização</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-question-circle me-2"></i>
+                        Precisa de Ajuda?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>Entre em contato com nossa central de atendimento:</p>
+                    <p class="mb-2"><i class="bi bi-telephone-fill me-2"></i> (96) 98114-4626</p>
+                    <p class="mb-0"><i class="bi bi-envelope-fill me-2"></i> atendimento@ultraclin.com.br</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 31px;
+    height: 100%;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 50px;
+}
+
+.timeline-marker {
+    position: absolute;
+    top: 0;
+    left: 24px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #dee2e6;
+}
+
+.timeline-content {
+    margin-left: 60px;
+}
+
+.timeline-title {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+}
+
+.timeline-description {
+    margin: 0 0 5px 0;
+    color: #6c757d;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Assistente - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}
+        {% if assistente %}
+            Editar Assistente
+        {% else %}
+            Novo Assistente
+        {% endif %}
+    {% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>
+                {% if assistente %}
+                    Editar Assistente
+                {% else %}
+                    Novo Assistente
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{% if assistente %}{{ url_for('admin.editar_assistente', id=assistente.id) }}{% else %}{{ url_for('admin.novo_assistente') }}{% endif %}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="nome_completo" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="nome_completo" name="nome_completo" value="{{ assistente.nome_completo if assistente else '' }}" required>
+                    </div>
+                    {% if not assistente %}
+                    <div class="col-md-6">
+                        <label for="cpf" class="form-label">CPF</label>
+                        <input type="text" class="form-control" id="cpf" name="cpf" required>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="row mb-3">
+                    {% if not assistente %}
+                    <div class="col-md-6">
+                        <label for="data_nascimento" class="form-label">Data de Nascimento</label>
+                        <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ assistente.email if assistente else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="telefone" class="form-label">Telefone</label>
+                        <input type="tel" class="form-control" id="telefone" name="telefone" value="{{ assistente.telefone if assistente else '' }}">
+                    </div>
+                    {% if not assistente %}
+                    <div class="col-md-6">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" id="senha" name="senha" required>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('admin.assistentes') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if assistente %}
+                            Atualizar
+                        {% else %}
+                            Cadastrar
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

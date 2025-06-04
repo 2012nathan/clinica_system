@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistentes - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Gerenciamento de Assistentes{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Gerenciamento de Assistentes</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('admin.novo_assistente') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Novo Assistente
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>CPF</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for assistente in assistentes %}
+                        <tr>
+                            <td>{{ assistente.id }}</td>
+                            <td>{{ assistente.nome_completo }}</td>
+                            <td>{{ assistente.cpf }}</td>
+                            <td>{{ assistente.email }}</td>
+                            <td>{{ assistente.telefone or '-' }}</td>
+                            <td>
+                                {% if assistente.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inativo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <!-- Botão Editar -->
+                                    <a href="{{ url_for('admin.editar_assistente', id=assistente.id) }}" 
+                                       class="btn btn-primary btn-sm" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    
+                                    <!-- Botão Ativar/Inativar -->
+                                    {% if assistente.ativo %}
+                                    <button type="button" class="btn btn-warning btn-sm" 
+                                            onclick="confirmarToggleStatus({{ assistente.id }}, '{{ assistente.nome_completo }}', 'inativar')" 
+                                            title="Inativar Assistente">
+                                        <i class="fas fa-pause-circle"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="button" class="btn btn-success btn-sm"
+                                            onclick="confirmarToggleStatus({{ assistente.id }}, '{{ assistente.nome_completo }}', 'ativar')"
+                                            title="Ativar Assistente">
+                                        <i class="fas fa-play-circle"></i>
+                                    </button>
+                                    {% endif %}
+                                    
+                                    <!-- Botão Excluir -->
+                                    <button type="button" class="btn btn-danger btn-sm" 
+                                            onclick="confirmarExclusao({{ assistente.id }}, '{{ assistente.nome_completo }}')" 
+                                            title="Excluir Assistente">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if not assistentes %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Nenhum assistente cadastrado. Clique em "Novo Assistente" para adicionar.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Toggle Status (Ativar/Inativar) -->
+    <div class="modal fade" id="modalToggleStatus" tabindex="-1" role="dialog" aria-labelledby="modalToggleStatusLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalToggleStatusLabel">Confirmar Ação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja <strong id="acaoStatus"></strong> a assistente <strong id="nomeAssistenteStatus"></strong>?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <form id="formToggleStatus" method="POST" style="display: inline;">
+                        <button type="submit" class="btn" id="btnConfirmarStatus">
+                            <i class="fas fa-check"></i> <span id="textoConfirmarStatus">Confirmar</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação de Exclusão -->
+    <div class="modal fade" id="modalExclusao" tabindex="-1" role="dialog" aria-labelledby="modalExclusaoLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExclusaoLabel">Confirmar Exclusão</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza que deseja excluir a assistente <strong id="nomeAssistente"></strong>?</p>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i> <strong>Esta ação não pode ser desfeita!</strong><br>
+                        <small>Todos os dados relacionados a esta assistente serão permanentemente removidos.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <form id="formExclusao" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Excluir Definitivamente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+    function confirmarToggleStatus(id, nome, acao) {
+        document.getElementById('nomeAssistenteStatus').textContent = nome;
+        document.getElementById('acaoStatus').textContent = acao;
+        document.getElementById('formToggleStatus').action = '/admin/assistentes/' + id + '/toggle_status';
+        
+        const btnConfirmar = document.getElementById('btnConfirmarStatus');
+        const textoConfirmar = document.getElementById('textoConfirmarStatus');
+        
+        if (acao === 'inativar') {
+            btnConfirmar.className = 'btn btn-warning';
+            textoConfirmar.textContent = 'Inativar';
+        } else {
+            btnConfirmar.className = 'btn btn-success';
+            textoConfirmar.textContent = 'Ativar';
+        }
+        
+        // Bootstrap 5 modal
+        const modal = new bootstrap.Modal(document.getElementById('modalToggleStatus'));
+        modal.show();
+    }
+
+    function confirmarExclusao(id, nome) {
+        document.getElementById('nomeAssistente').textContent = nome;
+        document.getElementById('formExclusao').action = '/admin/assistentes/excluir/' + id;
+        
+        // Bootstrap 5 modal
+        const modal = new bootstrap.Modal(document.getElementById('modalExclusao'));
+        modal.show();
+    }
+    </script>
+    {% endblock %}
+</body>
+</html>

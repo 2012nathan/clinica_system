@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+    <style>
+        .bg-ultraclin {
+            background-color: #ff6600; /* Laranja UltraClin */
+        }
+        .text-ultraclin {
+            color: #ff6600; /* Laranja UltraClin */
+        }
+        .btn-ultraclin {
+            background-color: #ff6600;
+            border-color: #ff6600;
+            color: white;
+        }
+        .btn-ultraclin:hover {
+            background-color: #e55c00;
+            border-color: #e55c00;
+            color: white;
+        }
+        .btn-outline-ultraclin {
+            border-color: #ff6600;
+            color: #ff6600;
+        }
+        .btn-outline-ultraclin:hover {
+            background-color: #ff6600;
+            color: white;
+        }
+        .card-stats {
+            transition: transform 0.3s;
+        }
+        .card-stats:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Dashboard Paciente - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header do Dashboard -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Meu Dashboard</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-person-fill me-2"></i>
+                            Bem-vindo(a), {{ session.get('user_name', 'Paciente') }}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-wifi me-1"></i>
+                            Online
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-primary text-white h-100 card-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Consultas Agendadas</h5>
+                                <h2 class="display-4">{{ consultas_agendadas|length if consultas_agendadas is defined else 0 }}</h2>
+                                <small>Próximas consultas</small>
+                            </div>
+                            <i class="bi bi-calendar-check fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a href="#consultas" class="text-white text-decoration-none">
+                            <small>Ver consultas</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white h-100 card-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Exames Pendentes</h5>
+                                <h2 class="display-4">{{ exames_pendentes|length if exames_pendentes is defined else 0 }}</h2>
+                                <small>Aguardando resultado</small>
+                            </div>
+                            <i class="bi bi-clipboard-data fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a href="#exames" class="text-white text-decoration-none">
+                            <small>Ver exames</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white h-100 card-stats">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Resultados Disponíveis</h5>
+                                <h2 class="display-4">{{ resultados_disponiveis|length if resultados_disponiveis is defined else 0 }}</h2>
+                                <small>Prontos para visualização</small>
+                            </div>
+                            <i class="bi bi-file-earmark-text fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between">
+                        <a href="#resultados" class="text-white text-decoration-none">
+                            <small>Ver resultados</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu de Ações Rápidas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-lightning-fill me-2"></i>
+                            Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('paciente.agendar_consulta') if 'agendar_consulta' in url_for_map else '#' }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-calendar-plus fs-1 mb-2"></i>
+                                    <span>Agendar Consulta</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('paciente.meus_exames') if 'meus_exames' in url_for_map else '#' }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-clipboard2-pulse fs-1 mb-2"></i>
+                                    <span>Meus Exames</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('paciente.meus_documentos') if 'meus_documentos' in url_for_map else '#' }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-file-earmark-medical fs-1 mb-2"></i>
+                                    <span>Meus Documentos</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('paciente.meu_perfil') if 'meu_perfil' in url_for_map else '#' }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-person-circle fs-1 mb-2"></i>
+                                    <span>Meu Perfil</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Próximas Consultas -->
+        <div class="row mb-4" id="consultas">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-calendar-week me-2"></i>
+                                Próximas Consultas
+                            </h5>
+                            <a href="{{ url_for('paciente.agendar_consulta') if 'agendar_consulta' in url_for_map else '#' }}" class="btn btn-sm btn-ultraclin">
+                                <i class="bi bi-plus-circle me-1"></i>
+                                Agendar Nova
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if consultas_agendadas is defined and consultas_agendadas|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Hora</th>
+                                        <th>Médico</th>
+                                        <th>Especialidade</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for consulta in consultas_agendadas %}
+                                    <tr>
+                                        <td>{{ consulta.data.strftime('%d/%m/%Y') if consulta.data else 'N/A' }}</td>
+                                        <td>{{ consulta.hora.strftime('%H:%M') if consulta.hora else 'N/A' }}</td>
+                                        <td>{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</td>
+                                        <td>{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</td>
+                                        <td>
+                                            <span class="badge bg-primary">Agendada</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('paciente.consulta_detalhes', id=consulta.id) if 'consulta_detalhes' in url_for_map else '#' }}" class="btn btn-sm btn-outline-ultraclin">
+                                                <i class="bi bi-eye"></i> Detalhes
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Você não possui consultas agendadas.
+                            <a href="{{ url_for('paciente.agendar_consulta') if 'agendar_consulta' in url_for_map else '#' }}" class="alert-link">Agende uma consulta agora</a>.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meus Exames -->
+        <div class="row mb-4" id="exames">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-clipboard2-pulse me-2"></i>
+                            Meus Exames
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if exames_pendentes is defined and exames_pendentes|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tipo de Exame</th>
+                                        <th>Solicitante</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exame in exames_pendentes %}
+                                    <tr>
+                                        <td>{{ exame.data_exame.strftime('%d/%m/%Y') if exame.data_exame else 'N/A' }}</td>
+                                        <td>{{ exame.tipo_exame }}</td>
+                                        <td>{{ exame.medico_solicitante if exame.medico_solicitante else 'N/A' }}</td>
+                                        <td>
+                                            {% if exame.status == 'pendente' %}
+                                            <span class="badge bg-warning text-dark">Pendente</span>
+                                            {% elif exame.status == 'coletado' %}
+                                            <span class="badge bg-info">Coletado</span>
+                                            {% elif exame.status == 'resultado_disponivel' or exame.status == 'laudado' %}
+                                            <span class="badge bg-success">Resultado Disponível</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('paciente.exame_detalhes', id=exame.id) if 'exame_detalhes' in url_for_map else '#' }}" class="btn btn-sm btn-outline-ultraclin">
+                                                <i class="bi bi-eye"></i> Detalhes
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Você não possui exames pendentes.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados Disponíveis -->
+        <div class="row" id="resultados">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Resultados Disponíveis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if resultados_disponiveis is defined and resultados_disponiveis|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Tipo de Documento</th>
+                                        <th>Título</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for documento in resultados_disponiveis %}
+                                    <tr>
+                                        <td>{{ documento.data_criacao.strftime('%d/%m/%Y') if documento.data_criacao else 'N/A' }}</td>
+                                        <td>{{ documento.tipo|capitalize }}</td>
+                                        <td>{{ documento.titulo }}</td>
+                                        <td>
+                                            <a href="{{ url_for('paciente.visualizar_documento', id=documento.id) if 'visualizar_documento' in url_for_map else '#' }}" class="btn btn-sm btn-outline-ultraclin">
+                                                <i class="bi bi-eye"></i> Visualizar
+                                            </a>
+                                            <a href="{{ url_for('paciente.download_documento', id=documento.id) if 'download_documento' in url_for_map else '#' }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-download"></i> Download
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Você não possui resultados disponíveis.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

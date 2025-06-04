@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartão Gestante - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Cartão Gestante{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Cartão Gestante</h2>
+            <p class="text-muted">Paciente: {{ paciente.usuario.nome_completo }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('medico.paciente_detalhes', id=paciente.id) }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Dados da Gestação</h5>
+                    {% if cartao %}
+                    <span class="badge bg-success">Cartão Ativo</span>
+                    {% else %}
+                    <span class="badge bg-warning">Cartão Não Iniciado</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('medico.cartao_gestante', paciente_id=paciente.id) }}">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="data_ultima_menstruacao" class="form-label">Data da Última Menstruação</label>
+                                <input type="date" class="form-control" id="data_ultima_menstruacao" name="data_ultima_menstruacao" value="{{ cartao.data_ultima_menstruacao.strftime('%Y-%m-%d') if cartao and cartao.data_ultima_menstruacao else '' }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="gestacoes_previas" class="form-label">Gestações Prévias</label>
+                                <input type="number" class="form-control" id="gestacoes_previas" name="gestacoes_previas" min="0" value="{{ cartao.gestacoes_previas if cartao and cartao.gestacoes_previas else '0' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="partos_previos" class="form-label">Partos Prévios</label>
+                                <input type="number" class="form-control" id="partos_previos" name="partos_previos" min="0" value="{{ cartao.partos_previos if cartao and cartao.partos_previos else '0' }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="abortos_previos" class="form-label">Abortos Prévios</label>
+                                <input type="number" class="form-control" id="abortos_previos" name="abortos_previos" min="0" value="{{ cartao.abortos_previos if cartao and cartao.abortos_previos else '0' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="altura_cm" class="form-label">Altura (cm)</label>
+                                <input type="number" class="form-control" id="altura_cm" name="altura_cm" min="100" max="220" value="{{ cartao.altura_cm if cartao and cartao.altura_cm else '' }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="peso_inicial_kg" class="form-label">Peso Inicial (kg)</label>
+                                <input type="number" class="form-control" id="peso_inicial_kg" name="peso_inicial_kg" min="30" max="200" step="0.1" value="{{ cartao.peso_inicial_kg if cartao and cartao.peso_inicial_kg else '' }}">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="grupo_sanguineo" class="form-label">Grupo Sanguíneo</label>
+                                <select class="form-select" id="grupo_sanguineo" name="grupo_sanguineo">
+                                    <option value="">Selecione</option>
+                                    <option value="A" {% if cartao and cartao.grupo_sanguineo == 'A' %}selected{% endif %}>A</option>
+                                    <option value="B" {% if cartao and cartao.grupo_sanguineo == 'B' %}selected{% endif %}>B</option>
+                                    <option value="AB" {% if cartao and cartao.grupo_sanguineo == 'AB' %}selected{% endif %}>AB</option>
+                                    <option value="O" {% if cartao and cartao.grupo_sanguineo == 'O' %}selected{% endif %}>O</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="fator_rh" class="form-label">Fator Rh</label>
+                                <select class="form-select" id="fator_rh" name="fator_rh">
+                                    <option value="">Selecione</option>
+                                    <option value="positivo" {% if cartao and cartao.fator_rh == 'positivo' %}selected{% endif %}>Positivo</option>
+                                    <option value="negativo" {% if cartao and cartao.fator_rh == 'negativo' %}selected{% endif %}>Negativo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                {% if cartao %}
+                                <label class="form-label">Data Provável do Parto</label>
+                                <input type="text" class="form-control" value="{{ cartao.data_provavel_parto.strftime('%d/%m/%Y') }}" readonly>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                {% if cartao %}
+                                <i class="bi bi-save"></i> Atualizar Dados
+                                {% else %}
+                                <i class="bi bi-plus-circle"></i> Iniciar Cartão Gestante
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if cartao %}
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Consultas Pré-Natal</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for consulta in consultas %}
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ consulta.data_consulta.strftime('%d/%m/%Y') }}</h6>
+                                        <small>{{ consulta.semanas_gestacao }} semanas</small>
+                                    </div>
+                                    <p class="mb-1">Peso: {{ consulta.peso_kg }}kg | PA: {{ consulta.pressao_arterial }}</p>
+                                    <small>{{ consulta.observacoes_medicas|truncate(50) }}</small>
+                                </a>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if not consultas %}
+                            <div class="alert alert-info">
+                                Nenhuma consulta registrada.
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid mt-3">
+                                <a href="{{ url_for('medico.nova_consulta_pre_natal', cartao_id=cartao.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Nova Consulta
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Exames</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for exame in exames %}
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ exame.tipo_exame }}</h6>
+                                        <small>{{ exame.data_solicitacao.strftime('%d/%m/%Y') }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ exame.observacoes|truncate(50) }}</p>
+                                    <small>
+                                        {% if exame.data_resultado %}
+                                        Resultado em: {{ exame.data_resultado.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                        Aguardando resultado
+                                        {% endif %}
+                                    </small>
+                                </a>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if not exames %}
+                            <div class="alert alert-info">
+                                Nenhum exame registrado.
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid mt-3">
+                                <a href="{{ url_for('medico.novo_exame_pre_natal', cartao_id=cartao.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Novo Exame
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title">Medicações</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for medicacao in medicacoes %}
+                                <a href="#" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ medicacao.nome_medicacao }}</h6>
+                                        <small>{{ medicacao.dosagem }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ medicacao.posologia }}</p>
+                                    <small>
+                                        Início: {{ medicacao.data_inicio.strftime('%d/%m/%Y') }}
+                                        {% if medicacao.data_fim %}
+                                        | Fim: {{ medicacao.data_fim.strftime('%d/%m/%Y') }}
+                                        {% endif %}
+                                    </small>
+                                </a>
+                                {% endfor %}
+                            </div>
+                            
+                            {% if not medicacoes %}
+                            <div class="alert alert-info">
+                                Nenhuma medicação registrada.
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid mt-3">
+                                <a href="{{ url_for('medico.nova_medicacao_gestante', cartao_id=cartao.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-plus-circle"></i> Nova Medicação
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trocar Senha - UltraClin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .bg-ultraclin {
+            background-color: #ff6600;
+        }
+        .text-ultraclin {
+            color: #ff6600;
+        }
+        .btn-ultraclin {
+            background-color: #ff6600;
+            border-color: #ff6600;
+            color: white;
+        }
+        .btn-ultraclin:hover {
+            background-color: #e55c00;
+            border-color: #e55c00;
+            color: white;
+        }
+        .password-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6600 0%, #e55c00 100%);
+        }
+        .password-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+        }
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background-color: #dc3545; }
+        .strength-medium { background-color: #ffc107; }
+        .strength-strong { background-color: #28a745; }
+    </style>
+</head>
+<body>
+    <div class="password-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-7 col-lg-6">
+                    <div class="password-card">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-shield-lock text-ultraclin" style="font-size: 3rem;"></i>
+                            <h4 class="text-ultraclin mt-2">Definir Nova Senha</h4>
+                            <p class="text-muted">Por favor, defina uma nova senha segura para sua conta</p>
+                        </div>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('auth.trocar_senha_provisoria') }}" id="passwordForm">
+                            <div class="mb-3">
+                                <label for="senha_atual" class="form-label">Senha Provisória Atual</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-key"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="senha_atual" name="senha_atual" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleCurrentPassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted">Digite a senha provisória que você recebeu por e-mail</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nova_senha" class="form-label">Nova Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="nova_senha" name="nova_senha" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleNewPassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="password-strength" id="passwordStrength"></div>
+                                <small class="text-muted">Mínimo de 8 caracteres</small>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="confirmar_senha" class="form-label">Confirmar Nova Senha</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="confirmar_senha" name="confirmar_senha" required>
+                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="passwordMatch" class="mt-1"></div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-ultraclin btn-lg" id="submitBtn" disabled>
+                                    <i class="bi bi-check-circle me-2"></i>Confirmar Nova Senha
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="alert alert-warning mt-4">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <small>
+                                <strong>Importante:</strong> Sua senha deve ter pelo menos 8 caracteres.
+                                Recomendamos usar uma combinação de letras, números e símbolos.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const senhaAtual = document.getElementById('senha_atual');
+            const novaSenha = document.getElementById('nova_senha');
+            const confirmarSenha = document.getElementById('confirmar_senha');
+            const passwordStrength = document.getElementById('passwordStrength');
+            const passwordMatch = document.getElementById('passwordMatch');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Toggle password visibility
+            function togglePassword(inputId, buttonId) {
+                const input = document.getElementById(inputId);
+                const button = document.getElementById(buttonId);
+                const icon = button.querySelector('i');
+                
+                button.addEventListener('click', function() {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'bi bi-eye-slash';
+                    } else {
+                        input.type = 'password';
+                        icon.className = 'bi bi-eye';
+                    }
+                });
+            }
+            
+            togglePassword('senha_atual', 'toggleCurrentPassword');
+            togglePassword('nova_senha', 'toggleNewPassword');
+            togglePassword('confirmar_senha', 'toggleConfirmPassword');
+            
+            // Check password strength
+            function checkPasswordStrength(password) {
+                let strength = 0;
+                
+                if (password.length >= 8) strength++;
+                if (password.match(/[a-z]/)) strength++;
+                if (password.match(/[A-Z]/)) strength++;
+                if (password.match(/[0-9]/)) strength++;
+                if (password.match(/[^a-zA-Z0-9]/)) strength++;
+                
+                passwordStrength.style.width = (strength * 20) + '%';
+                
+                if (strength <= 2) {
+                    passwordStrength.className = 'password-strength strength-weak';
+                } else if (strength <= 3) {
+                    passwordStrength.className = 'password-strength strength-medium';
+                } else {
+                    passwordStrength.className = 'password-strength strength-strong';
+                }
+                
+                return strength;
+            }
+            
+            // Check password match
+            function checkPasswordMatch() {
+                if (confirmarSenha.value && novaSenha.value) {
+                    if (novaSenha.value === confirmarSenha.value) {
+                        passwordMatch.innerHTML = '<small class="text-success"><i class="bi bi-check"></i> Senhas coincidem</small>';
+                        return true;
+                    } else {
+                        passwordMatch.innerHTML = '<small class="text-danger"><i class="bi bi-x"></i> Senhas não coincidem</small>';
+                        return false;
+                    }
+                }
+                passwordMatch.innerHTML = '';
+                return false;
+            }
+            
+            // Check form validity - FUNÇÃO CORRIGIDA
+            function checkFormValidity() {
+                const senhaAtualValida = senhaAtual.value.length > 0;
+                const novaSenhaValida = novaSenha.value.length >= 8;
+                const senhasCoincide = checkPasswordMatch();
+                
+                const isValid = senhaAtualValida && novaSenhaValida && senhasCoincide;
+                
+                submitBtn.disabled = !isValid;
+                
+                // Debug (pode remover em produção)
+                console.log('Validação:', {
+                    senhaAtualValida,
+                    novaSenhaValida,
+                    senhasCoincide,
+                    isValid
+                });
+            }
+            
+            // Event listeners - CORRIGIDO PARA CHAMAR checkFormValidity EM TODOS OS CAMPOS
+            senhaAtual.addEventListener('input', checkFormValidity);
+            
+            novaSenha.addEventListener('input', function() {
+                checkPasswordStrength(this.value);
+                checkFormValidity(); // ADICIONADO
+            });
+            
+            confirmarSenha.addEventListener('input', function() {
+                checkFormValidity(); // ADICIONADO
+            });
+            
+            // Form validation
+            document.getElementById('passwordForm').addEventListener('submit', function(e) {
+                if (novaSenha.value.length < 8) {
+                    e.preventDefault();
+                    alert('A nova senha deve ter pelo menos 8 caracteres');
+                    return false;
+                }
+                
+                if (novaSenha.value !== confirmarSenha.value) {
+                    e.preventDefault();
+                    alert('As senhas não coincidem');
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Auto-foco no primeiro campo
+            senhaAtual.focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Consulta - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Detalhes da Consulta</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.minhas_consultas') }}">Minhas Consultas</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Detalhes</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div>
+                    <a href="{{ url_for('paciente.minhas_consultas') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Informações da Consulta -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Informações da Consulta
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Data e Horário</label>
+                            <p class="form-control-plaintext">
+                                {{ consulta.data_hora_inicio.strftime('%d/%m/%Y às %H:%M') if consulta.data_hora_inicio else 'N/A' }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Status</label>
+                            <p class="form-control-plaintext">
+                                {% if consulta.status == 'agendado' %}
+                                <span class="badge bg-primary fs-6">Agendada</span>
+                                {% elif consulta.status == 'realizado' %}
+                                <span class="badge bg-success fs-6">Realizada</span>
+                                {% elif consulta.status == 'cancelado' %}
+                                <span class="badge bg-danger fs-6">Cancelada</span>
+                                {% else %}
+                                <span class="badge bg-secondary fs-6">{{ consulta.status|capitalize }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Especialidade</label>
+                            <p class="form-control-plaintext">{{ consulta.profissional.especialidade.nome if consulta.profissional and consulta.profissional.especialidade else 'N/A' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Profissional</label>
+                            <p class="form-control-plaintext">{{ consulta.profissional.usuario.nome_completo if consulta.profissional and consulta.profissional.usuario else 'N/A' }}</p>
+                        </div>
+                    </div>
+                    {% if consulta.motivo_consulta %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Motivo da Consulta</label>
+                        <p class="form-control-plaintext">{{ consulta.motivo_consulta }}</p>
+                    </div>
+                    {% endif %}
+                    {% if consulta.convenio %}
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Convênio</label>
+                            <p class="form-control-plaintext">{{ consulta.convenio }}</p>
+                        </div>
+                        {% if consulta.numero_convenio %}
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Número do Convênio</label>
+                            <p class="form-control-plaintext">{{ consulta.numero_convenio }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% if consulta.status == 'cancelado' and consulta.motivo_cancelamento %}
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Motivo do Cancelamento</label>
+                        <p class="form-control-plaintext">{{ consulta.motivo_cancelamento }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if consulta.status == 'agendado' %}
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelarModal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancelar Consulta
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Informações Importantes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-clock me-2"></i>
+                        <strong>Chegada</strong>
+                        <p class="mb-0 mt-2">Recomendamos chegar com 15 minutos de antecedência.</p>
+                    </div>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-file-text me-2"></i>
+                        <strong>Documentos</strong>
+                        <p class="mb-0 mt-2">Traga documento de identidade e cartão do convênio.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cancelamento -->
+{% if consulta.status == 'agendado' %}
+<div class="modal fade" id="cancelarModal" tabindex="-1" aria-labelledby="cancelarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelarModalLabel">Cancelar Consulta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('paciente.cancelar_consulta') }}">
+                <div class="modal-body">
+                    <input type="hidden" name="consulta_id" value="{{ consulta.id }}">
+                    <p>Tem certeza que deseja cancelar esta consulta?</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Cancelamentos com menos de 24 horas de antecedência podem estar sujeitos a cobrança de taxa administrativa.
+                    </div>
+                    <div class="mb-3">
+                        <label for="motivo_cancelamento" class="form-label">Motivo do Cancelamento</label>
+                        <select class="form-select" id="motivo_cancelamento" name="motivo_cancelamento" required>
+                            <option value="">Selecione um motivo</option>
+                            <option value="Indisponibilidade de horário">Indisponibilidade de horário</option>
+                            <option value="Problema de saúde">Problema de saúde</option>
+                            <option value="Consulta remarcada">Consulta remarcada</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="divOutroMotivo" style="display: none;">
+                        <label for="outro_motivo" class="form-label">Especifique o Motivo</label>
+                        <textarea class="form-control" id="outro_motivo" name="outro_motivo" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar/ocultar campo de outro motivo
+        const motivoSelect = document.getElementById('motivo_cancelamento');
+        const outroMotivoDiv = document.getElementById('divOutroMotivo');
+        
+        if (motivoSelect && outroMotivoDiv) {
+            motivoSelect.addEventListener('change', function() {
+                if (this.value === 'Outro') {
+                    outroMotivoDiv.style.display = 'block';
+                } else {
+                    outroMotivoDiv.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

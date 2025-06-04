@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Buscar Paciente - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Buscar Paciente</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-search me-2"></i>
+                            Busque um paciente para gerenciar seus exames de imagem
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Formulário de Busca -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light text-center">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-search me-2"></i>
+                            Buscar Paciente por CPF
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" id="formBusca">
+                            <div class="row justify-content-center">
+                                <div class="col-md-8">
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-ultraclin text-white">
+                                            <i class="bi bi-search"></i>
+                                        </span>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="cpf" 
+                                               name="cpf" 
+                                               placeholder="Digite o CPF do paciente" 
+                                               required
+                                               autocomplete="off"
+                                               maxlength="14">
+                                        <button type="submit" class="btn btn-ultraclin">
+                                            <i class="bi bi-search me-1"></i>
+                                            Buscar
+                                        </button>
+                                    </div>
+                                    <div class="form-text text-center mt-2">
+                                        Digite apenas números ou use o formato: 000.000.000-00
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instruções -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            Como Funciona
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-search text-ultraclin" style="font-size: 3rem;"></i>
+                                </div>
+                                <h6 class="text-ultraclin">1. Busque o Paciente</h6>
+                                <p class="text-muted">Digite o CPF do paciente para encontrá-lo no sistema local.</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-calendar-check text-ultraclin" style="font-size: 3rem;"></i>
+                                </div>
+                                <h6 class="text-ultraclin">2. Visualize Agendamentos SHOSP</h6>
+                                <p class="text-muted">Veja os agendamentos confirmados de exames de imagem do SHOSP.</p>
+                            </div>
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="mb-3">
+                                    <i class="bi bi-plus-circle text-ultraclin" style="font-size: 3rem;"></i>
+                                </div>
+                                <h6 class="text-ultraclin">3. Crie ou Gerencie Exames</h6>
+                                <p class="text-muted">Crie exames a partir dos agendamentos ou gerencie exames existentes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tipos de Exame Suportados -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-list-check me-2"></i>
+                            Tipos de Exame Suportados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Exame Normal -->
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-camera text-primary mb-2" style="font-size: 2rem;"></i>
+                                        <h6 class="card-title text-primary">Exame Normal</h6>
+                                        <p class="card-text small text-muted">
+                                            Exames padrão que terão DICOM vinculado e laudo em PDF anexado.
+                                        </p>
+                                        <div class="mt-auto">
+                                            <span class="badge bg-primary">DICOM + Laudo</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Gravação -->
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-camera-video text-warning mb-2" style="font-size: 2rem;"></i>
+                                        <h6 class="card-title text-warning">Gravação de US</h6>
+                                        <p class="card-text small text-muted">
+                                            Gravações de ultrassom com link de acesso e senha para o paciente.
+                                        </p>
+                                        <div class="mt-auto">
+                                            <span class="badge bg-warning text-dark">Link + Senha</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Complemento -->
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-info h-100">
+                                    <div class="card-body text-center">
+                                        <i class="bi bi-plus-circle text-info mb-2" style="font-size: 2rem;"></i>
+                                        <h6 class="card-title text-info">Exame Complementar</h6>
+                                        <p class="card-text small text-muted">
+                                            Complementos de outros exames, como aferição de colo junto ao morfológico.
+                                        </p>
+                                        <div class="mt-auto">
+                                            <span class="badge bg-info">Complemento</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Funcionalidades Especiais -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-tools me-2"></i>
+                            Funcionalidades Especiais
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-link-45deg text-ultraclin me-3" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Integração SHOSP</h6>
+                                        <p class="text-muted mb-0">
+                                            Busca automática de agendamentos confirmados no sistema SHOSP para evitar retrabalho.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-trash text-danger me-3" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Exclusão Inteligente</h6>
+                                        <p class="text-muted mb-0">
+                                            Exclua agendamentos que não são exames para que não apareçam mais nas buscas.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-diagram-3 text-success me-3" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Vinculação DICOM</h6>
+                                        <p class="text-muted mb-0">
+                                            Vincule estudos DICOM do Orthanc aos exames para visualização completa.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0">
+                                        <i class="bi bi-file-earmark-plus text-primary me-3" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1">Upload de Laudos</h6>
+                                        <p class="text-muted mb-0">
+                                            Anexe laudos em PDF com sistema de drag & drop e validação automática.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Máscara para CPF
+            $('#cpf').mask('000.000.000-00', {
+                placeholder: '000.000.000-00',
+                clearIfNotMatch: true
+            });
+
+            // Foco automático no campo CPF
+            $('#cpf').focus();
+
+            // Validação do formulário
+            $('#formBusca').on('submit', function(e) {
+                const cpf = $('#cpf').val().replace(/\D/g, '');
+                
+                if (cpf.length !== 11) {
+                    e.preventDefault();
+                    alert('Por favor, digite um CPF válido com 11 dígitos.');
+                    $('#cpf').focus();
+                    return false;
+                }
+
+                // Mostrar loading
+                const btnSubmit = $(this).find('button[type="submit"]');
+                const textoOriginal = btnSubmit.html();
+                btnSubmit.html('<i class="bi bi-hourglass-split me-1"></i> Buscando...');
+                btnSubmit.prop('disabled', true);
+
+                // Restaurar botão em caso de erro
+                setTimeout(function() {
+                    btnSubmit.html(textoOriginal);
+                    btnSubmit.prop('disabled', false);
+                }, 10000);
+            });
+
+            // Permitir apenas números no CPF
+            $('#cpf').on('keypress', function(e) {
+                const char = String.fromCharCode(e.which);
+                if (!/[0-9\.\-]/.test(char)) {
+                    e.preventDefault();
+                }
+            });
+
+            // Auto-submit ao completar CPF
+            $('#cpf').on('input', function() {
+                const cpf = $(this).val().replace(/\D/g, '');
+                if (cpf.length === 11) {
+                    // Aguardar um pouco para o usuário ver o CPF completo
+                    setTimeout(function() {
+                        $('#formBusca').submit();
+                    }, 500);
+                }
+            });
+        });
+    </script>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Especialidade - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}
+        {% if especialidade %}
+            Editar Especialidade
+        {% else %}
+            Nova Especialidade
+        {% endif %}
+    {% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>
+                {% if especialidade %}
+                    Editar Especialidade
+                {% else %}
+                    Nova Especialidade
+                {% endif %}
+            </h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST" action="{% if especialidade %}{{ url_for('admin.editar_especialidade', id=especialidade.id) }}{% else %}{{ url_for('admin.nova_especialidade') }}{% endif %}">
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome da Especialidade</label>
+                    <input type="text" class="form-control" id="nome" name="nome" value="{{ especialidade.nome if especialidade else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição</label>
+                    <textarea class="form-control" id="descricao" name="descricao" rows="3">{{ especialidade.descricao if especialidade else '' }}</textarea>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('admin.especialidades') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        {% if especialidade %}
+                            Atualizar
+                        {% else %}
+                            Cadastrar
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exames de Imagem do Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Exames de Imagem do Paciente - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Exames de Imagem do Paciente</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-person me-2"></i>
+                            {{ paciente.usuario.nome_completo }} - CPF: {{ paciente.usuario.cpf[:3] }}.{{ paciente.usuario.cpf[3:6] }}.{{ paciente.usuario.cpf[6:9] }}-{{ paciente.usuario.cpf[9:] }}
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.buscar_paciente') }}" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Nova Busca
+                        </a>
+                        <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-ultraclin">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Vincular Exame
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Paciente -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Informações do Paciente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">Nome:</dt>
+                                    <dd class="col-sm-8">{{ paciente.usuario.nome_completo }}</dd>
+
+                                    <dt class="col-sm-4">CPF:</dt>
+                                    <dd class="col-sm-8">{{ paciente.usuario.cpf[:3] }}.{{ paciente.usuario.cpf[3:6] }}.{{ paciente.usuario.cpf[6:9] }}-{{ paciente.usuario.cpf[9:] }}</dd>
+
+                                    <dt class="col-sm-4">Data de Nascimento:</dt>
+                                    <dd class="col-sm-8">{{ paciente.usuario.data_nascimento.strftime('%d/%m/%Y') }}</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl class="row">
+                                    <dt class="col-sm-4">E-mail:</dt>
+                                    <dd class="col-sm-8">{{ paciente.usuario.email }}</dd>
+
+                                    <dt class="col-sm-4">Telefone:</dt>
+                                    <dd class="col-sm-8">{{ paciente.usuario.telefone or 'Não informado' }}</dd>
+
+                                    {% if paciente.convenio %}
+                                    <dt class="col-sm-4">Convênio:</dt>
+                                    <dd class="col-sm-8">
+                                        {{ paciente.convenio }}
+                                        {% if paciente.numero_convenio %}({{ paciente.numero_convenio }}){% endif %}
+                                    </dd>
+                                    {% endif %}
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Exames -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-camera me-2"></i>
+                                Exames de Imagem
+                            </h5>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary me-2">{{ exames|length }} exame(s)</span>
+                                <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-sm btn-ultraclin">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Vincular Novo Exame
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if exames %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Tipo de Exame</th>
+                                        <th>Data Realização</th>
+                                        <th>Status</th>
+                                        <th>Laudo</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exame in exames %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ exame.id }}</strong>
+                                            {% if exame.orthanc_study_uid %}
+                                            <br><small class="text-muted">DICOM: {{ exame.orthanc_study_uid[:12] }}...</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ exame.tipo_exame }}</span>
+                                            {% if exame.descricao %}
+                                                <br><small class="text-muted">{{ exame.descricao[:40] }}{% if exame.descricao|length > 40 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if exame.data_realizacao %}
+                                            <strong>{{ exame.data_realizacao.strftime('%d/%m/%Y') }}</strong>
+                                            <br><small class="text-muted">{{ exame.data_realizacao.strftime('%H:%M') }}</small>
+                                            {% else %}
+                                            <span class="text-muted">Não informada</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if exame.status == 'pendente' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-hourglass-split me-1"></i>
+                                                Pendente
+                                            </span>
+                                            {% elif exame.status == 'laudado' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Laudado
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">
+                                                {{ exame.status|capitalize }}
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if exame.status == 'laudado' %}
+                                            <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" 
+                                               class="btn btn-sm btn-outline-success" title="Ver laudo">
+                                                <i class="bi bi-file-earmark-medical"></i>
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">Sem laudo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                
+                                                {% if exame.orthanc_study_uid %}
+                                                <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=exame.orthanc_study_uid) }}" 
+                                                   class="btn btn-sm btn-outline-info" title="Visualizar imagens" target="_blank">
+                                                    <i class="bi bi-camera"></i>
+                                                </a>
+                                                {% endif %}
+                                                
+                                                {% if exame.status == 'pendente' %}
+                                                <a href="{{ url_for('assistente.anexar_laudo', exame_id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-success" title="Anexar laudo">
+                                                    <i class="bi bi-file-earmark-plus"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-camera-video text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum exame de imagem encontrado</h5>
+                            <p class="text-muted">Este paciente ainda não possui exames de imagem cadastrados no sistema.</p>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                                <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-ultraclin">
+                                    <i class="bi bi-search me-2"></i>
+                                    Buscar Exames no Orthanc
+                                </a>
+                                <a href="{{ url_for('laboratorio.buscar_paciente_laboratorio') }}" class="btn btn-outline-success">
+                                    <i class="bi bi-flask me-2"></i>
+                                    Ver Exames Laboratoriais
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumo de Exames -->
+        {% if exames %}
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2">{{ exames|selectattr("status", "equalto", "pendente")|list|length }}</h5>
+                        <p class="text-muted mb-0">Pendentes de Laudo</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2">{{ exames|selectattr("status", "equalto", "laudado")|list|length }}</h5>
+                        <p class="text-muted mb-0">Com Laudo Disponível</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center shadow-sm">
+                    <div class="card-body">
+                        <i class="bi bi-camera text-info" style="font-size: 2rem;"></i>
+                        <h5 class="mt-2">{{ exames|selectattr("orthanc_study_uid")|list|length }}</h5>
+                        <p class="text-muted mb-0">Com Imagens DICOM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Instruções -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            Como Vincular um Novo Exame
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-server text-ultraclin" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">1. Buscar no Orthanc</h6>
+                                <p class="text-muted small">Acesse a lista de estudos DICOM disponíveis</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-plus-circle text-info" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">2. Cadastrar Estudo</h6>
+                                <p class="text-muted small">Vincule o estudo DICOM a este paciente</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-camera text-success" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">3. Visualizar Imagens</h6>
+                                <p class="text-muted small">Use o visualizador DICOM para ver as imagens</p>
+                            </div>
+                            <div class="col-md-3 text-center mb-3">
+                                <i class="bi bi-file-earmark-medical text-warning" style="font-size: 2rem;"></i>
+                                <h6 class="mt-2">4. Anexar Laudo</h6>
+                                <p class="text-muted small">Faça upload do laudo médico em PDF</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn-group .btn {
+        margin-right: 0;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+
+    dl dt {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    dl dd {
+        font-size: 0.875rem;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease;
+    }
+    </style>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tooltip para botões
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Destacar linha ao passar o mouse
+            const tableRows = document.querySelectorAll('tbody tr');
+            tableRows.forEach(row => {
+                row.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                });
+                row.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                });
+            });
+        });
+    </script>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

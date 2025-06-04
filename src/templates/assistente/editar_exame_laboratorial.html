@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Exame Laboratorial - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Editar Exame Laboratorial - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Editar Exame Laboratorial</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Exame #{{ exame.id }} - {{ exame.tipo_exame }}
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Formulário de Edição -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-form-check me-2"></i>
+                            Dados do Exame
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        {% if exame.status != 'pendente' %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Este exame já foi processado e não pode mais ser editado. 
+                            Apenas exames com status "Pendente" podem ser modificados.
+                        </div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('laboratorio.editar_exame_laboratorial', id=exame.id) }}" id="formEditarExame">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="paciente_info" class="form-label">Paciente</label>
+                                    <div class="form-control-plaintext bg-light rounded p-2">
+                                        <strong>{{ exame.paciente.usuario.nome_completo }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            CPF: {{ exame.paciente.usuario.cpf[:3] }}.{{ exame.paciente.usuario.cpf[3:6] }}.{{ exame.paciente.usuario.cpf[6:9] }}-{{ exame.paciente.usuario.cpf[9:] }}
+                                        </small>
+                                    </div>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        O paciente não pode ser alterado. Para vincular a outro paciente, crie um novo exame.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="tipo_exame" class="form-label">Tipo de Exame <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="tipo_exame" name="tipo_exame" required 
+                                            {{ 'disabled' if exame.status != 'pendente' else '' }}>
+                                        <option value="">Selecione o tipo de exame</option>
+                                        <option value="Hemograma Completo" {{ 'selected' if exame.tipo_exame == 'Hemograma Completo' else '' }}>Hemograma Completo</option>
+                                        <option value="Glicemia de Jejum" {{ 'selected' if exame.tipo_exame == 'Glicemia de Jejum' else '' }}>Glicemia de Jejum</option>
+                                        <option value="Colesterol Total e Frações" {{ 'selected' if exame.tipo_exame == 'Colesterol Total e Frações' else '' }}>Colesterol Total e Frações</option>
+                                        <option value="Triglicerídeos" {{ 'selected' if exame.tipo_exame == 'Triglicerídeos' else '' }}>Triglicerídeos</option>
+                                        <option value="TSH" {{ 'selected' if exame.tipo_exame == 'TSH' else '' }}>TSH</option>
+                                        <option value="T4 Livre" {{ 'selected' if exame.tipo_exame == 'T4 Livre' else '' }}>T4 Livre</option>
+                                        <option value="Ácido Úrico" {{ 'selected' if exame.tipo_exame == 'Ácido Úrico' else '' }}>Ácido Úrico</option>
+                                        <option value="Ureia" {{ 'selected' if exame.tipo_exame == 'Ureia' else '' }}>Ureia</option>
+                                        <option value="Creatinina" {{ 'selected' if exame.tipo_exame == 'Creatinina' else '' }}>Creatinina</option>
+                                        <option value="TGO/TGP" {{ 'selected' if exame.tipo_exame == 'TGO/TGP' else '' }}>TGO/TGP</option>
+                                        <option value="Urina Tipo I" {{ 'selected' if exame.tipo_exame == 'Urina Tipo I' else '' }}>Urina Tipo I</option>
+                                        <option value="Parasitológico de Fezes" {{ 'selected' if exame.tipo_exame == 'Parasitológico de Fezes' else '' }}>Parasitológico de Fezes</option>
+                                        <option value="Beta HCG" {{ 'selected' if exame.tipo_exame == 'Beta HCG' else '' }}>Beta HCG</option>
+                                        <option value="Outro" {{ 'selected' if exame.tipo_exame == 'Outro' else '' }}>Outro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="data_solicitacao" class="form-label">Data de Solicitação <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="data_solicitacao" name="data_solicitacao" 
+                                           value="{{ exame.data_solicitacao.strftime('%Y-%m-%d') if exame.data_solicitacao else '' }}" 
+                                           required {{ 'disabled' if exame.status != 'pendente' else '' }}>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="medico_solicitante" class="form-label">Médico Solicitante</label>
+                                    <input type="text" class="form-control" id="medico_solicitante" name="medico_solicitante" 
+                                           value="{{ exame.medico_solicitante or '' }}"
+                                           placeholder="Nome do médico que solicitou o exame"
+                                           {{ 'disabled' if exame.status != 'pendente' else '' }}>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="observacoes" class="form-label">Observações</label>
+                                    <textarea class="form-control" id="observacoes" name="observacoes" rows="4"
+                                              placeholder="Observações adicionais sobre o exame..."
+                                              {{ 'disabled' if exame.status != 'pendente' else '' }}>{{ exame.observacoes or '' }}</textarea>
+                                </div>
+                            </div>
+
+                            {% if exame.status == 'pendente' %}
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-secondary">
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-ultraclin">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="text-center">
+                                <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-ultraclin">
+                                    <i class="bi bi-arrow-left me-1"></i>
+                                    Voltar aos Detalhes
+                                </a>
+                            </div>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações Laterais -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Status do Exame
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if exame.status == 'pendente' %}
+                        <i class="bi bi-hourglass-split text-warning" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-warning">Pendente</h5>
+                        <p class="text-muted">Aguardando coleta do material</p>
+                        <small class="text-success">
+                            <i class="bi bi-check-circle me-1"></i>
+                            Pode ser editado
+                        </small>
+                        {% elif exame.status == 'coletado' %}
+                        <i class="bi bi-flask text-info" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-info">Coletado</h5>
+                        <p class="text-muted">Material coletado, aguardando resultado</p>
+                        <small class="text-danger">
+                            <i class="bi bi-lock me-1"></i>
+                            Não pode mais ser editado
+                        </small>
+                        {% elif exame.status == 'resultado_disponivel' %}
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                        <h5 class="mt-3 text-success">Resultado Disponível</h5>
+                        <p class="text-muted">Resultado pronto para visualização</p>
+                        <small class="text-danger">
+                            <i class="bi bi-lock me-1"></i>
+                            Não pode mais ser editado
+                        </small>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-clock-history me-2"></i>
+                            Histórico do Exame
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-primary"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">Cadastrado</h6>
+                                    <small class="text-muted">{{ exame.data_cadastro.strftime('%d/%m/%Y %H:%M') if exame.data_cadastro else 'N/A' }}</small>
+                                </div>
+                            </div>
+
+                            {% if exame.data_coleta %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-info"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">Material Coletado</h6>
+                                    <small class="text-muted">{{ exame.data_coleta.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if exame.data_resultado %}
+                            <div class="timeline-item">
+                                <div class="timeline-marker bg-success"></div>
+                                <div class="timeline-content">
+                                    <h6 class="timeline-title">Resultado Anexado</h6>
+                                    <small class="text-muted">{{ exame.data_resultado.strftime('%d/%m/%Y %H:%M') }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Política de Edição
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Exames podem ser editados apenas quando:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li>Status é "Pendente"</li>
+                                    <li>Material ainda não foi coletado</li>
+                                    <li>Resultado ainda não foi anexado</li>
+                                </ul>
+                            </small>
+                        </div>
+
+                        {% if exame.status == 'pendente' %}
+                        <div class="alert alert-success">
+                            <small>
+                                <i class="bi bi-check-circle me-1"></i>
+                                <strong>Este exame pode ser editado</strong> pois ainda está pendente de coleta.
+                            </small>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="bi bi-lock me-1"></i>
+                                <strong>Este exame não pode ser editado</strong> pois já foi processado.
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 15px;
+        height: 100%;
+        width: 2px;
+        background: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        top: 0;
+        left: 8px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 3px #dee2e6;
+    }
+
+    .timeline-content {
+        margin-left: 40px;
+    }
+
+    .timeline-title {
+        margin: 0 0 5px 0;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .btn-ultraclin:disabled {
+        background-color: #cccccc;
+        border-color: #cccccc;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+
+    .form-control:disabled,
+    .form-select:disabled {
+        background-color: #f8f9fa;
+        opacity: 0.7;
+    }
+
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+    }
+    </style>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('formEditarExame');
+            const btnSubmit = form.querySelector('button[type="submit"]');
+
+            // Validação do formulário
+            form.addEventListener('submit', function(e) {
+                const tipoExame = document.getElementById('tipo_exame').value.trim();
+                const dataSolicitacao = document.getElementById('data_solicitacao').value.trim();
+
+                if (!tipoExame) {
+                    e.preventDefault();
+                    alert('Por favor, selecione o tipo de exame.');
+                    document.getElementById('tipo_exame').focus();
+                    return;
+                }
+
+                if (!dataSolicitacao) {
+                    e.preventDefault();
+                    alert('Por favor, informe a data de solicitação.');
+                    document.getElementById('data_solicitacao').focus();
+                    return;
+                }
+
+                // Mostrar loading
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Salvando...';
+                }
+            });
+
+            // Validação em tempo real
+            const campos = ['tipo_exame', 'data_solicitacao'];
+            campos.forEach(campo => {
+                const elemento = document.getElementById(campo);
+                if (elemento && !elemento.disabled) {
+                    elemento.addEventListener('change', function() {
+                        if (this.value.trim()) {
+                            this.classList.add('is-valid');
+                            this.classList.remove('is-invalid');
+                        } else {
+                            this.classList.remove('is-valid');
+                            this.classList.add('is-invalid');
+                        }
+                    });
+                }
+            });
+
+            // Aviso sobre data no futuro
+            const dataInput = document.getElementById('data_solicitacao');
+            if (dataInput && !dataInput.disabled) {
+                dataInput.addEventListener('change', function() {
+                    const dataSelecionada = new Date(this.value);
+                    const hoje = new Date();
+                    hoje.setHours(0, 0, 0, 0);
+
+                    if (dataSelecionada > hoje) {
+                        if (confirm('A data selecionada é futura. Tem certeza que deseja continuar?')) {
+                            this.classList.add('is-valid');
+                        } else {
+                            this.value = '';
+                            this.classList.remove('is-valid');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

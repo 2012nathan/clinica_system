@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exames Laboratoriais do Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Exames Laboratoriais do Paciente{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-ultraclin">Exames Laboratoriais do Paciente</h2>
+            <p class="text-muted">{{ paciente.usuario.nome_completo }} - CPF: {{ paciente.usuario.cpf }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('laboratorio.buscar_paciente_laboratorio') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Nova Busca
+            </a>
+            <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-ultraclin ms-2">
+                <i class="bi bi-plus-circle"></i> Novo Exame
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Informações do Paciente</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Nome:</strong> {{ paciente.usuario.nome_completo }}</p>
+                    <p><strong>CPF:</strong> {{ paciente.usuario.cpf }}</p>
+                    <p><strong>Data de Nascimento:</strong> {{ paciente.usuario.data_nascimento.strftime('%d/%m/%Y') }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>E-mail:</strong> {{ paciente.usuario.email }}</p>
+                    <p><strong>Telefone:</strong> {{ paciente.usuario.telefone }}</p>
+                    {% if paciente.convenio %}
+                    <p><strong>Convênio:</strong> {{ paciente.convenio }} {% if paciente.numero_convenio %}({{ paciente.numero_convenio }}){% endif %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="card-title mb-0">Exames Laboratoriais</h5>
+        </div>
+        <div class="card-body">
+            {% if exames %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Tipo de Exame</th>
+                            <th>Data Solicitação</th>
+                            <th>Status</th>
+                            <th>Resultado</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for exame in exames %}
+                        <tr>
+                            <td>{{ exame.id }}</td>
+                            <td>{{ exame.tipo_exame }}</td>
+                            <td>{{ exame.data_solicitacao.strftime('%d/%m/%Y') }}</td>
+                            <td>
+                                {% if exame.status == 'pendente' %}
+                                <span class="badge bg-warning text-dark">Pendente</span>
+                                {% elif exame.status == 'coletado' %}
+                                <span class="badge bg-info">Coletado</span>
+                                {% elif exame.status == 'resultado_disponivel' %}
+                                <span class="badge bg-success">Resultado Disponível</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if exame.arquivo_resultado %}
+                                <a href="{{ url_for('static', filename=exame.arquivo_resultado) }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-file-earmark-pdf"></i> Ver
+                                </a>
+                                {% else %}
+                                <span class="text-muted">Não disponível</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-sm btn-outline-ultraclin">
+                                    <i class="bi bi-eye"></i> Detalhes
+                                </a>
+                                
+                                {% if exame.status == 'pendente' %}
+                                <form method="POST" action="{{ url_for('laboratorio.registrar_coleta', exame_id=exame.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-check-circle"></i> Coletar
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                {% if exame.status == 'coletado' or exame.status == 'pendente' %}
+                                <a href="{{ url_for('laboratorio.anexar_resultado', exame_id=exame.id) }}" class="btn btn-sm btn-outline-ultraclin">
+                                    <i class="bi bi-upload"></i> Anexar
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Este paciente não possui exames laboratoriais cadastrados.
+            </div>
+            <div class="text-center mt-3">
+                <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-ultraclin">
+                    <i class="bi bi-plus-circle"></i> Cadastrar Novo Exame
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

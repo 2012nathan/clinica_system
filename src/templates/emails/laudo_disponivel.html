@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laudo de Exame Disponível - UltraClin</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6600, #e55c00);
+            color: white;
+            padding: 0;
+            text-align: center;
+        }
+        .header-logo {
+            background-color: white;
+            padding: 20px;
+            border-top: 5px solid #ff6600;
+        }
+        .header-logo img {
+            height: 70px;
+            width: auto;
+            max-width: 280px;
+        }
+        .header-content {
+            padding: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        .header .subtitle {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .exam-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #ff6600;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .exam-info h3 {
+            margin: 0 0 10px 0;
+            color: #ff6600;
+            font-size: 20px;
+        }
+        .exam-detail {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        .exam-detail strong {
+            color: #2c3e50;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+        .cta-section {
+            text-align: center;
+            padding: 30px 0;
+            background-color: #f8f9fa;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6600, #e55c00);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            font-size: 16px;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            color: white;
+        }
+        .instructions {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .instructions h4 {
+            color: #1976d2;
+            margin: 0 0 10px 0;
+        }
+        .instructions ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin: 5px 0;
+        }
+        .medical-notice {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .medical-notice h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+        }
+        .medical-notice p {
+            margin: 5px 0;
+            color: #856404;
+        }
+        .first-access {
+            background-color: #e1f5fe;
+            border: 1px solid #b3e5fc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .first-access h4 {
+            color: #0277bd;
+            margin: 0 0 15px 0;
+        }
+        .first-access p {
+            margin: 8px 0;
+            color: #0277bd;
+        }
+        .contact-info {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .contact-info h4 {
+            color: #155724;
+            margin: 0 0 15px 0;
+        }
+        .contact-item {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .contact-item i {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+            color: #ff6600;
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #ff6600;
+            text-decoration: none;
+        }
+        .security-note {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .security-note .icon {
+            color: #0c5460;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .header {
+                padding: 20px 15px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+            .content {
+                padding: 20px 15px;
+            }
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-logo">
+                <img src="https://exames.ultraclin.com.br/static/images/logo.png" alt="UltraClin" onerror="this.style.display='none';">
+            </div>
+            <div class="header-content">
+                <p class="subtitle">Centro de Diagnóstico por Imagem</p>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Olá, <strong>{{ paciente_nome }}</strong>!
+            </div>
+
+            <p>Temos uma excelente notícia para você! ✨</p>
+
+            <div class="exam-info">
+                <h3>📋 Laudo Médico Disponível</h3>
+                <div class="exam-detail">
+                    <strong>Tipo de Exame:</strong> {{ tipo_exame }}
+                </div>
+                {% if data_realizacao %}
+                <div class="exam-detail">
+                    <strong>Data de Realização:</strong> {{ data_realizacao }}
+                </div>
+                {% endif %}
+                {% if medico_responsavel %}
+                <div class="exam-detail">
+                    <strong>Médico Responsável:</strong> {{ medico_responsavel }}
+                </div>
+                {% endif %}
+                <div class="status-badge">
+                    ✅ Laudo Pronto
+                </div>
+            </div>
+
+            <p>Seu laudo médico foi finalizado por nossos especialistas e está disponível para visualização e download em nosso portal do paciente.</p>
+
+            <!-- Call to Action -->
+            <div class="cta-section">
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📱 Acesse Seu Laudo</h3>
+                <a href="https://exames.ultraclin.com.br" class="cta-button">
+                    🔐 Acessar Portal do Paciente
+                </a>
+                <div style="margin-top: 15px; color: #6c757d;">
+                    <small>Use suas credenciais de acesso para fazer login</small>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h4>📋 Como Acessar Seu Laudo:</h4>
+                <ol>
+                    <li>Acesse o portal do paciente no link acima</li>
+                    <li>Faça login com seu CPF e senha</li>
+                    <li>Vá para a seção "Meus Documentos"</li>
+                    <li>Localize o laudo do seu exame</li>
+                    <li>Visualize online ou faça o download em PDF</li>
+                </ol>
+            </div>
+
+            <!-- First Access Instructions -->
+            <div class="first-access">
+                <h4>🔑 Primeiro Acesso ou Esqueceu a Senha?</h4>
+                <p><strong>• Não tem senha ainda?</strong> Clique em "RECUPERAR SENHA" no portal de acesso</p>
+                <p><strong>• Esqueceu sua senha?</strong> Use a opção "RECUPERAR SENHA" para receber uma nova</p>
+                <p><strong>• Como receber:</strong> A senha provisória será enviada para seu email ou WhatsApp cadastrado na clínica</p>
+                <p><strong>• Ainda com problemas?</strong> Entre em contato conosco para atualizar seus dados</p>
+            </div>
+
+            <!-- Medical Notice -->
+            <div class="medical-notice">
+                <h4>⚕️ Importante - Orientação Médica</h4>
+                <p><strong>• Este laudo deve ser analisado por um médico qualificado</strong></p>
+                <p>• Não interrompa tratamentos sem orientação médica</p>
+                <p>• Em caso de dúvidas, consulte seu médico assistente</p>
+                <p>• O laudo possui validade médica e legal</p>
+            </div>
+
+            <!-- Security Note -->
+            <div class="security-note">
+                <span class="icon">🔒</span>
+                <strong>Segurança:</strong> Este laudo é confidencial e protegido por login. Apenas você tem acesso aos seus documentos médicos em nosso sistema.
+            </div>
+
+            <!-- Contact Info -->
+            <div class="contact-info">
+                <h4>📞 Precisa de Ajuda?</h4>
+                <div class="contact-item">
+                    <i>📱</i> WhatsApp: (96) 98114-4626
+                </div>
+                <div class="contact-item">
+                    <i>📧</i> Email: contato@ultraclin.com.br
+                </div>
+                <div class="contact-item">
+                    <i>🕐</i> Horário: Seg à Sex, 7h às 19h | Sáb, 7h às 13h
+                </div>
+                <div style="margin-top: 15px;">
+                    <p><strong>💬 Envie uma mensagem:</strong> Qualquer dúvida, entre em contato pelo nosso WhatsApp!</p>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; color: #6c757d;">
+                <p>Agradecemos pela confiança em nossos serviços! 💙</p>
+                <p><strong>Equipe UltraClin</strong></p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; {{ ano_atual }} UltraClin - Centro de Diagnóstico por Imagem</p>
+            <p>
+                <a href="https://exames.ultraclin.com.br">exames.ultraclin.com.br</a> | 
+                Macapá - AP
+            </p>
+            <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">
+                Este é um email automático. Por favor, não responda a esta mensagem.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

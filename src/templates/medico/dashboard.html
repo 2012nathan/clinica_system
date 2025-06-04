@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Médico - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Dashboard Médico{% endblock %}
+
+    {% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="mb-4">Dashboard Médico</h2>
+            <h5 class="text-muted mb-4">Bem-vindo(a), Dr(a). {{ profissional.usuario.nome_completo }}</h5>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Consultas Agendadas</h5>
+                            <h2 class="display-4">{{ total_agendamentos }}</h2>
+                        </div>
+                        <i class="bi bi-calendar-check fs-1"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('medico.agenda') }}" class="text-white text-decoration-none">Ver agenda</a>
+                    <i class="bi bi-arrow-right text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Documentos Emitidos</h5>
+                            <h2 class="display-4">{{ total_documentos }}</h2>
+                        </div>
+                        <i class="bi bi-file-earmark-text fs-1"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('medico.pacientes') }}" class="text-white text-decoration-none">Ver documentos</a>
+                    <i class="bi bi-arrow-right text-white"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Pacientes Atendidos</h5>
+                            <h2 class="display-4">{{ total_pacientes }}</h2>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+                <div class="card-footer d-flex align-items-center justify-content-between">
+                    <a href="{{ url_for('medico.pacientes') }}" class="text-white text-decoration-none">Ver pacientes</a>
+                    <i class="bi bi-arrow-right text-white"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Próximas Consultas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Paciente</th>
+                                    <th>Motivo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agendamento in proximos_agendamentos %}
+                                <tr>
+                                    <td>{{ agendamento.data_hora_inicio.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>{{ agendamento.paciente.usuario.nome_completo }}</td>
+                                    <td>{{ agendamento.motivo_consulta|truncate(30) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not proximos_agendamentos %}
+                    <div class="alert alert-info">
+                        Não há consultas agendadas.
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('medico.agenda') }}" class="btn btn-primary mt-2">Ver agenda completa</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Ações Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="{{ url_for('medico.buscar_paciente') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-search me-2"></i> Buscar Paciente por CPF
+                        </a>
+                        <a href="{{ url_for('medico.agenda') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-calendar-week me-2"></i> Visualizar Agenda
+                        </a>
+                        <a href="{{ url_for('medico.pacientes') }}" class="list-group-item list-group-item-action">
+                            <i class="bi bi-people me-2"></i> Listar Pacientes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

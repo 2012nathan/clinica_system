@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - UltraClin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        .bg-ultraclin {
+            background-color: #ff6600;
+        }
+        .text-ultraclin {
+            color: #ff6600;
+        }
+        .btn-ultraclin {
+            background-color: #ff6600;
+            border-color: #ff6600;
+            color: white;
+        }
+        .btn-ultraclin:hover {
+            background-color: #e55c00;
+            border-color: #e55c00;
+            color: white;
+        }
+        .cadastro-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #ff6600 0%, #e55c00 100%);
+        }
+        .cadastro-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+        }
+        .cadastro-logo {
+            max-height: 80px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="cadastro-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="cadastro-card">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-hospital text-ultraclin" style="font-size: 3rem;"></i>
+                            <h4 class="text-ultraclin mt-2">Cadastro de Paciente</h4>
+                            <p class="text-muted">Preencha seus dados para criar sua conta</p>
+                        </div>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        
+                        <form method="POST" action="{{ url_for('auth.cadastro') }}" id="cadastroForm">
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <label for="nome_completo" class="form-label">Nome Completo *</label>
+                                    <input type="text" class="form-control" id="nome_completo" name="nome_completo" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cpf" class="form-label">CPF *</label>
+                                    <input type="text" class="form-control" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="data_nascimento" class="form-label">Data de Nascimento *</label>
+                                    <input type="date" class="form-control" id="data_nascimento" name="data_nascimento" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">E-mail *</label>
+                                    <input type="email" class="form-control" id="email" name="email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="celular" class="form-label">Celular *</label>
+                                    <input type="text" class="form-control" id="celular" name="celular" placeholder="(00) 00000-0000" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="sexo" class="form-label">Sexo</label>
+                                    <select class="form-select" id="sexo" name="sexo">
+                                        <option value="">Selecione...</option>
+                                        <option value="M">Masculino</option>
+                                        <option value="F">Feminino</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cartao_sus" class="form-label">Cartão SUS</label>
+                                    <input type="text" class="form-control" id="cartao_sus" name="cartao_sus" placeholder="000 0000 0000 0000">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="convenio" class="form-label">Convênio</label>
+                                    <input type="text" class="form-control" id="convenio" name="convenio" placeholder="Nome do convênio">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="numero_convenio" class="form-label">Número do Convênio</label>
+                                    <input type="text" class="form-control" id="numero_convenio" name="numero_convenio" placeholder="Número da carteirinha">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="endereco" class="form-label">Endereço</label>
+                                <input type="text" class="form-control" id="endereco" name="endereco" placeholder="Rua, número, bairro, cidade">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="nome_mae" class="form-label">Nome da Mãe</label>
+                                <input type="text" class="form-control" id="nome_mae" name="nome_mae">
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label for="como_conheceu" class="form-label">Como conheceu nossa clínica? *</label>
+                                <select class="form-select" id="como_conheceu" name="como_conheceu" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="indicacao_medico">Indicação médica</option>
+                                    <option value="indicacao_amigo">Indicação de amigo/familiar</option>
+                                    <option value="internet">Internet/Google</option>
+                                    <option value="redes_sociais">Redes sociais</option>
+                                    <option value="convenio">Através do convênio</option>
+                                    <option value="outros">Outros</option>
+                                </select>
+                            </div>
+                            
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-ultraclin btn-lg">
+                                    <i class="bi bi-person-plus me-2"></i>Cadastrar
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="text-center">
+                            <p>Já possui conta? <a href="{{ url_for('auth.login') }}" class="text-ultraclin text-decoration-none">Faça login</a></p>
+                            <p><a href="{{ url_for('auth.recuperar_senha') }}" class="text-muted text-decoration-none">Esqueci minha senha</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            // Máscaras para os campos
+            $('#cpf').mask('000.000.000-00');
+            $('#celular').mask('(00) 00000-0000');
+            $('#cartao_sus').mask('0000 0000 0000 0000');
+            
+            // Validação do formulário
+            $('#cadastroForm').on('submit', function(e) {
+                // Validar CPF
+                var cpf = $('#cpf').val().replace(/[^0-9]/g, '');
+                if (cpf.length !== 11) {
+                    e.preventDefault();
+                    alert('CPF deve conter 11 dígitos');
+                    return false;
+                }
+                
+                // Validar campos obrigatórios
+                var camposObrigatorios = ['nome_completo', 'cpf', 'data_nascimento', 'email', 'celular', 'como_conheceu'];
+                for (var i = 0; i < camposObrigatorios.length; i++) {
+                    var campo = $('#' + camposObrigatorios[i]).val();
+                    if (!campo || campo.trim() === '') {
+                        e.preventDefault();
+                        alert('Por favor, preencha todos os campos obrigatórios (*)');
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            // Auto-foco no primeiro campo
+            $('#nome_completo').focus();
+        });
+    </script>
+</body>
+</html>

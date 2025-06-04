@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Documentos - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Meus Documentos</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Meus Documentos</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('paciente.meus_documentos') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="tipo" class="form-label">Tipo de Documento</label>
+                            <select class="form-select" id="tipo" name="tipo">
+                                <option value="todos" {% if request.args.get('tipo') == 'todos' or not request.args.get('tipo') %}selected{% endif %}>Todos</option>
+                                <option value="laudo" {% if request.args.get('tipo') == 'laudo' %}selected{% endif %}>Laudos</option>
+                                <option value="receita" {% if request.args.get('tipo') == 'receita' %}selected{% endif %}>Receitas</option>
+                                <option value="atestado" {% if request.args.get('tipo') == 'atestado' %}selected{% endif %}>Atestados</option>
+                                <option value="resultado" {% if request.args.get('tipo') == 'resultado' %}selected{% endif %}>Resultados de Exames</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search me-1"></i>
+                                Filtrar
+                            </button>
+                            <a href="{{ url_for('paciente.meus_documentos') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Documentos -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-file-earmark-text me-2"></i>
+                        Documentos Disponíveis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if documentos and documentos|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Título</th>
+                                    <th>Médico</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for documento in documentos %}
+                                <tr>
+                                    <td>{{ documento.data_criacao.strftime('%d/%m/%Y') if documento.data_criacao else 'N/A' }}</td>
+                                    <td>
+                                        {% if documento.tipo == 'laudo' %}
+                                        <span class="badge bg-info">Laudo</span>
+                                        {% elif documento.tipo == 'receita' %}
+                                        <span class="badge bg-success">Receita</span>
+                                        {% elif documento.tipo == 'atestado' %}
+                                        <span class="badge bg-warning">Atestado</span>
+                                        {% elif documento.tipo == 'resultado' %}
+                                        <span class="badge bg-primary">Resultado</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ documento.tipo|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ documento.titulo }}</td>
+                                    <td>{{ documento.medico.usuario.nome_completo if documento.medico and documento.medico.usuario else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.visualizar_documento', id=documento.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Visualizar
+                                        </a>
+                                        <a href="{{ url_for('paciente.download_documento', id=documento.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhum documento encontrado com os filtros selecionados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Código JavaScript específico para esta página, se necessário
+    });
+</script>
+{% endblock %}

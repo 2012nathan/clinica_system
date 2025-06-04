@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Trocar Perfil - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Trocar Perfil</h4>
+                </div>
+                <div class="card-body">
+                    <p class="mb-4">Você está atualmente utilizando o perfil <strong>{{ session.get('perfil_atual', '')|capitalize }}</strong>. Deseja trocar para outro perfil?</p>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('auth.selecionar_perfil') }}" class="btn btn-primary">Selecionar outro perfil</a>
+                        <a href="{{ url_for(session.get('perfil_atual', 'auth.login') + '.dashboard') }}" class="btn btn-outline-secondary">Voltar para o dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

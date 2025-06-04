@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Paciente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Detalhes do Paciente - {{ paciente.usuario.nome_completo }}{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Detalhes do Paciente</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.buscar_paciente') }}">Buscar Paciente</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">{{ paciente.usuario.nome_completo }}</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.buscar_paciente') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Nova Busca
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Informações do Paciente -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-circle me-2"></i>
+                            Informações do Paciente
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Nome:</strong> {{ paciente.usuario.nome_completo }}</p>
+                                <p><strong>CPF:</strong> {{ paciente.usuario.cpf[:3] }}.{{ paciente.usuario.cpf[3:6] }}.{{ paciente.usuario.cpf[6:9] }}-{{ paciente.usuario.cpf[9:] }}</p>
+                                <p><strong>Data de Nascimento:</strong> {{ paciente.usuario.data_nascimento.strftime('%d/%m/%Y') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>E-mail:</strong> {{ paciente.usuario.email }}</p>
+                                <p><strong>Telefone:</strong> {{ paciente.usuario.telefone or 'Não informado' }}</p>
+                                {% if paciente.convenio %}
+                                    <p><strong>Convênio:</strong> {{ paciente.convenio }}
+                                        {% if paciente.numero_convenio %}({{ paciente.numero_convenio }}){% endif %}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Agendamentos SHOSP -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-calendar-check me-2"></i>
+                            Agendamentos SHOSP (Exames de Imagem)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if agendamentos_shosp %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Data/Hora</th>
+                                            <th>Tipo de Exame</th>
+                                            <th>Prestador</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for agendamento in agendamentos_shosp %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ agendamento.data_agendamento_str }}</strong>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if agendamento.is_gravacao %}
+                                                        <i class="bi bi-camera-video text-warning me-2" title="Gravação de US"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-camera text-primary me-2" title="Exame de Imagem"></i>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ agendamento.tipo_agendamento }}</strong>
+                                                        {% if agendamento.is_gravacao %}
+                                                            <br><small class="text-warning">Gravação de US</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if agendamento.prestador_nome %}
+                                                    {{ agendamento.prestador_nome }}
+                                                    <br><small class="text-muted">Código: {{ agendamento.prestador_codigo }}</small>
+                                                {% else %}
+                                                    <small class="text-muted">Código: {{ agendamento.prestador_codigo }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">Confirmado</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    {% if agendamento.pode_criar_exame %}
+                                                        <a href="{{ url_for('assistente.criar_exame_agendamento', agendamento_id=agendamento.id, cpf=paciente.usuario.cpf) }}" 
+                                                           class="btn btn-sm btn-ultraclin" title="Criar Exame">
+                                                            <i class="bi bi-plus-circle"></i> Criar Exame
+                                                        </a>
+                                                    {% endif %}
+                                                    
+                                                    <!-- Botão para excluir agendamento -->
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="mostrarModalExclusao('{{ agendamento.id }}', '{{ agendamento.tipo_agendamento }}', '{{ paciente.usuario.cpf }}')"
+                                                            title="Excluir agendamento">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Nenhum agendamento de exame de imagem encontrado no SHOSP para este paciente.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exames Locais -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-clipboard-data me-2"></i>
+                            Exames no Sistema Local
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if exames_locais %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Tipo de Exame</th>
+                                            <th>Data</th>
+                                            <th>Status</th>
+                                            <th>Tipo</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exame in exames_locais %}
+                                        <tr>
+                                            <td><strong>#{{ exame.id }}</strong></td>
+                                            <td>
+                                                {{ exame.tipo_exame }}
+                                                {% if exame.is_complemento() %}
+                                                    <br><small class="text-muted">Complemento de: {{ exame.get_nome_exame_principal() }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ exame.data_realizacao.strftime('%d/%m/%Y') if exame.data_realizacao else 'N/A' }}</td>
+                                            <td>
+                                                {% if exame.status == 'pendente' %}
+                                                    <span class="badge bg-warning text-dark">Pendente</span>
+                                                {% elif exame.status == 'coletado' %}
+                                                    <span class="badge bg-info">Coletado</span>
+                                                {% elif exame.status == 'laudado' %}
+                                                    <span class="badge bg-success">Laudado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if exame.is_gravacao() %}
+                                                    <span class="badge bg-warning">Gravação</span>
+                                                {% elif exame.is_complemento() %}
+                                                    <span class="badge bg-info">Complemento</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Normal</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                    <i class="bi bi-eye"></i> Detalhes
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Nenhum exame cadastrado no sistema local para este paciente.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Exclusão de Agendamento -->
+    <div class="modal fade" id="modalExclusaoAgendamento" tabindex="-1" aria-labelledby="modalExclusaoAgendamentoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalExclusaoAgendamentoLabel">Excluir Agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formExclusaoAgendamento" method="POST">
+                    <div class="modal-body">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Atenção:</strong> Este agendamento será permanentemente excluído e não aparecerá mais nas buscas futuras.
+                        </div>
+                        
+                        <p>Tem certeza que deseja excluir o agendamento: <strong id="tipoExameExclusao"></strong>?</p>
+                        
+                        <div class="mb-3">
+                            <label for="motivo" class="form-label">Motivo da exclusão:</label>
+                            <select class="form-select" id="motivo" name="motivo" required>
+                                <option value="nao_e_exame">Não é um exame</option>
+                                <option value="duplicado">Agendamento duplicado</option>
+                                <option value="cancelado">Agendamento cancelado</option>
+                                <option value="outro">Outro motivo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="descricao" class="form-label">Descrição (opcional):</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="3" 
+                                      placeholder="Descreva o motivo da exclusão..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Excluir Agendamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        function mostrarModalExclusao(agendamentoId, tipoExame, cpf) {
+            document.getElementById('tipoExameExclusao').textContent = tipoExame;
+            document.getElementById('formExclusaoAgendamento').action = 
+                `/assistente/excluir_agendamento/${agendamentoId}/${cpf}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalExclusaoAgendamento'));
+            modal.show();
+        }
+
+        // Auto-refresh da página a cada 5 minutos para buscar novos agendamentos
+        setTimeout(function() {
+            location.reload();
+        }, 300000); // 5 minutos
+    </script>
+    {% endblock %}
+</body>
+</html>

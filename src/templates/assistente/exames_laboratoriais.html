@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Assistente - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Dashboard Assistente - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header do Dashboard -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Dashboard Assistente</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-person-check-fill me-2"></i>
+                            Bem-vindo(a), {{ session.get('user_name', 'Assistente') }}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success fs-6">
+                            <i class="bi bi-wifi me-1"></i>
+                            Online
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-warning text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Exames Pendentes</h5>
+                                <h2 class="display-4">{{ exames.filter(lambda x: x.status == 'pendente')|list|length if exames else 0 }}</h2>
+                                <small>Aguardando processamento</small>
+                            </div>
+                            <i class="bi bi-hourglass-split fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between bg-rgba-255-255-255-0-1">
+                        <a href="{{ url_for('laboratorio.exames_laboratoriais', status='pendente') }}" class="text-white text-decoration-none">
+                            <small>Ver exames pendentes</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Exames Coletados</h5>
+                                <h2 class="display-4">{{ exames.filter(lambda x: x.status == 'coletado')|list|length if exames else 0 }}</h2>
+                                <small>Aguardando resultado</small>
+                            </div>
+                            <i class="bi bi-flask fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between bg-rgba-255-255-255-0-1">
+                        <a href="{{ url_for('laboratorio.exames_laboratoriais', status='coletado') }}" class="text-white text-decoration-none">
+                            <small>Ver exames coletados</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Resultados Disponíveis</h5>
+                                <h2 class="display-4">{{ exames.filter(lambda x: x.status == 'resultado_disponivel')|list|length if exames else 0 }}</h2>
+                                <small>Prontos para entrega</small>
+                            </div>
+                            <i class="bi bi-check-circle-fill fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                    <div class="card-footer d-flex align-items-center justify-content-between bg-rgba-255-255-255-0-1">
+                        <a href="{{ url_for('laboratorio.exames_laboratoriais', status='resultado_disponivel') }}" class="text-white text-decoration-none">
+                            <small>Ver resultados disponíveis</small>
+                        </a>
+                        <i class="bi bi-arrow-right text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu de Ações Rápidas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-lightning-fill me-2"></i>
+                            Ações Rápidas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-plus-circle fs-1 mb-2"></i>
+                                    <span>Novo Exame</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('laboratorio.buscar_paciente_laboratorio') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-person-search fs-1 mb-2"></i>
+                                    <span>Buscar Paciente</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('laboratorio.exames_laboratoriais', status='pendente') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-hourglass-split fs-1 mb-2"></i>
+                                    <span>Exames Pendentes</span>
+                                </a>
+                            </div>
+                            <div class="col-md-3 col-sm-6 mb-3">
+                                <a href="{{ url_for('laboratorio.exames_laboratoriais') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                    <i class="bi bi-list-check fs-1 mb-2"></i>
+                                    <span>Gerenciar Exames</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Navegação -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clipboard-data me-2"></i>
+                                Exames Laboratoriais
+                            </h5>
+                            <div>
+                                <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-ultraclin btn-sm">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Novo Exame
+                                </a>
+                            </div>
+                        </div>
+                        <ul class="nav nav-tabs card-header-tabs mt-3">
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if status_filtro == 'todos' or not status_filtro else '' }}" 
+                                   href="{{ url_for('laboratorio.exames_laboratoriais', status='todos') }}">
+                                    <i class="bi bi-list me-1"></i>
+                                    Todos
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if status_filtro == 'pendente' else '' }}" 
+                                   href="{{ url_for('laboratorio.exames_laboratoriais', status='pendente') }}">
+                                    <i class="bi bi-hourglass-split me-1"></i>
+                                    Pendentes
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if status_filtro == 'coletado' else '' }}" 
+                                   href="{{ url_for('laboratorio.exames_laboratoriais', status='coletado') }}">
+                                    <i class="bi bi-flask me-1"></i>
+                                    Coletados
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {{ 'active' if status_filtro == 'resultado_disponivel' else '' }}" 
+                                   href="{{ url_for('laboratorio.exames_laboratoriais', status='resultado_disponivel') }}">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Resultados Disponíveis
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        {% if exames %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Paciente</th>
+                                        <th>Tipo de Exame</th>
+                                        <th>Data Solicitação</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exame in exames %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ exame.id }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-initial bg-light-primary rounded-circle me-2">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                                <div>
+                                                    <strong>{{ exame.paciente.usuario.nome_completo }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        CPF: {{ exame.paciente.usuario.cpf[:3] }}.{{ exame.paciente.usuario.cpf[3:6] }}.{{ exame.paciente.usuario.cpf[6:9] }}-{{ exame.paciente.usuario.cpf[9:] }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ exame.tipo_exame }}</span>
+                                            {% if exame.descricao %}
+                                                <br><small class="text-muted">{{ exame.descricao[:50] }}{% if exame.descricao|length > 50 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ exame.data_solicitacao.strftime('%d/%m/%Y') }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ exame.data_solicitacao.strftime('%H:%M') }}</small>
+                                        </td>
+                                        <td>
+                                            {% if exame.status == 'pendente' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-hourglass-split me-1"></i>
+                                                Pendente
+                                            </span>
+                                            {% elif exame.status == 'coletado' %}
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-flask me-1"></i>
+                                                Coletado
+                                            </span>
+                                            {% elif exame.status == 'resultado_disponivel' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Resultado Disponível
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                {% if exame.status == 'pendente' %}
+                                                <a href="{{ url_for('laboratorio.editar_exame_laboratorial', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-secondary" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                {% endif %}
+                                                {% if exame.status == 'resultado_disponivel' %}
+                                                <a href="{{ url_for('laboratorio.download_resultado', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-success" title="Download resultado">
+                                                    <i class="bi bi-download"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-clipboard-x text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum exame laboratorial encontrado</h5>
+                            <p class="text-muted">
+                                {% if status_filtro and status_filtro != 'todos' %}
+                                    Não há exames com o status "{{ status_filtro }}" no momento.
+                                {% else %}
+                                    Não há exames cadastrados no sistema.
+                                {% endif %}
+                            </p>
+                            <a href="{{ url_for('laboratorio.cadastrar_exame_laboratorial') }}" class="btn btn-ultraclin">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                Cadastrar Primeiro Exame
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .bg-rgba-255-255-255-0-1 {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .avatar-initial {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn-group .btn {
+        margin-right: 0;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .display-4 {
+        font-weight: 300;
+    }
+
+    .nav-tabs .nav-link {
+        border: none;
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+        color: #FF7F00;
+    }
+
+    .nav-tabs .nav-link.active {
+        background-color: transparent;
+        border-color: transparent transparent #FF7F00 transparent;
+        border-bottom-width: 3px;
+        color: #FF7F00;
+        font-weight: 600;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .btn-outline-ultraclin {
+        color: #FF7F00;
+        border-color: #FF7F00;
+    }
+
+    .btn-outline-ultraclin:hover {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2rem;
+        }
+        
+        .card-body .row .col-md-3 {
+            margin-bottom: 1rem;
+        }
+        
+        .btn-group .btn {
+            margin-bottom: 0.25rem;
+        }
+    }
+    </style>
+    {% endblock %}
+
+    {% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Atualizar estatísticas a cada 5 minutos
+        setInterval(function() {
+            location.reload();
+        }, 300000); // 5 minutos
+        
+        // Adicionar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Confirmar ações de exclusão
+        $('.btn-danger').on('click', function(e) {
+            if (!confirm('Tem certeza que deseja excluir este item?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+    </script>
+    {% endblock %}
+</body>
+</html>

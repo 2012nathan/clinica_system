@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar Exames no Orthanc - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Buscar Exames no Orthanc - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Buscar Exames no Orthanc</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-search me-2"></i>
+                            Busque e importe estudos DICOM do servidor Orthanc
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.exames') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar aos Exames
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instruções -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Como usar:</strong> Esta página mostra os estudos mais recentes disponíveis no servidor Orthanc. 
+                    Você pode cadastrar um estudo no sistema para vinculá-lo a um paciente e anexar laudos.
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Estudos do Orthanc -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-server me-2"></i>
+                                Estudos Disponíveis no Orthanc
+                            </h5>
+                            <button type="button" class="btn btn-outline-ultraclin btn-sm" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Atualizar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if estudos %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID do Estudo</th>
+                                        <th>Paciente</th>
+                                        <th>Data/Hora</th>
+                                        <th>Descrição</th>
+                                        <th>Séries/Instâncias</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for estudo in estudos %}
+                                    <tr>
+                                        <td>
+                                            <code class="text-primary">{{ estudo.ID[:12] }}...</code>
+                                            {% if estudo.AccessionNumber %}
+                                            <br><small class="text-muted">Acc: {{ estudo.AccessionNumber }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ estudo.PatientName if estudo.PatientName != 'Desconhecido' else 'Nome não informado' }}</strong>
+                                                {% if estudo.PatientID %}
+                                                <br><small class="text-muted">ID: {{ estudo.PatientID }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if estudo.StudyDate %}
+                                            <strong>{{ estudo.StudyDate[:4] }}/{{ estudo.StudyDate[4:6] }}/{{ estudo.StudyDate[6:8] }}</strong>
+                                            {% if estudo.StudyTime %}
+                                            <br><small class="text-muted">{{ estudo.StudyTime[:2] }}:{{ estudo.StudyTime[2:4] }}</small>
+                                            {% endif %}
+                                            {% else %}
+                                            <span class="text-muted">Data não informada</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if estudo.StudyDescription %}
+                                            <span class="badge bg-light text-dark">{{ estudo.StudyDescription }}</span>
+                                            {% else %}
+                                            <span class="text-muted">Sem descrição</span>
+                                            {% endif %}
+                                            {% if estudo.ReferringPhysicianName %}
+                                            <br><small class="text-muted">Médico: {{ estudo.ReferringPhysicianName }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="text-center">
+                                                <span class="badge bg-info">{{ estudo.SeriesCount }} séries</span>
+                                                <br>
+                                                <small class="text-muted">{{ estudo.InstancesCount }} instâncias</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if estudo.cadastrado %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Cadastrado
+                                            </span>
+                                            {% if estudo.status %}
+                                            <br><small class="text-muted">{{ estudo.status|capitalize }}</small>
+                                            {% endif %}
+                                            {% else %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                Não Cadastrado
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical" role="group">
+                                                {% if not estudo.cadastrado %}
+                                                <a href="{{ url_for('assistente.cadastrar_exame_orthanc', orthanc_study_uid=estudo.ID) }}" 
+                                                   class="btn btn-sm btn-ultraclin mb-1">
+                                                    <i class="bi bi-plus-circle me-1"></i>
+                                                    Cadastrar
+                                                </a>
+                                                {% endif %}
+                                                
+                                                <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=estudo.ID) }}" 
+                                                   class="btn btn-sm btn-outline-info mb-1" target="_blank">
+                                                    <i class="bi bi-eye me-1"></i>
+                                                    Visualizar
+                                                </a>
+                                                
+                                                {% if estudo.cadastrado %}
+                                                <a href="{{ url_for('assistente.exame_detalhes', id=estudo.exame_id if estudo.exame_id else '#') }}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Detalhes
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-server text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum estudo encontrado no Orthanc</h5>
+                            <p class="text-muted">
+                                Não foi possível conectar ao servidor Orthanc ou não há estudos disponíveis.
+                            </p>
+                            <button type="button" class="btn btn-outline-ultraclin" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>
+                                Tentar Novamente
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Servidor -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Informações do Servidor Orthanc
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Status da Conexão:</strong>
+                                {% if estudos %}
+                                <span class="badge bg-success ms-2">Conectado</span>
+                                {% else %}
+                                <span class="badge bg-danger ms-2">Desconectado</span>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Estudos Exibidos:</strong>
+                                <span class="ms-2">{{ estudos|length if estudos else 0 }} (máximo 10)</span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Última Atualização:</strong>
+                                <span class="ms-2" id="ultima-atualizacao">{{ moment().format('DD/MM/YYYY HH:mm') if moment else 'Agora' }}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <small class="text-muted">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    <strong>Dica:</strong> Os estudos são exibidos em ordem de criação mais recente. 
+                                    Para ver mais estudos, use a interface web do Orthanc diretamente.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .btn-group-vertical .btn {
+        margin-bottom: 0.25rem;
+    }
+
+    .btn-group-vertical .btn:last-child {
+        margin-bottom: 0;
+    }
+
+    code {
+        font-size: 0.875rem;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .btn-outline-ultraclin {
+        color: #FF7F00;
+        border-color: #FF7F00;
+    }
+
+    .btn-outline-ultraclin:hover {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+    </style>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        // Atualizar timestamp
+        document.addEventListener('DOMContentLoaded', function() {
+            const agora = new Date();
+            const timestamp = agora.toLocaleString('pt-BR');
+            const elemento = document.getElementById('ultima-atualizacao');
+            if (elemento) {
+                elemento.textContent = timestamp;
+            }
+        });
+
+        // Auto-refresh opcional (descomentear se quiser)
+        // setInterval(function() {
+        //     location.reload();
+        // }, 60000); // Atualiza a cada 1 minuto
+    </script>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

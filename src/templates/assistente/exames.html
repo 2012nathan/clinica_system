@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exames de Imagem - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Exames de Imagem - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Exames de Imagem</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-camera me-2"></i>
+                            Gerenciamento de exames de imagem e laudos
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-outline-ultraclin me-2">
+                            <i class="bi bi-search me-1"></i>
+                            Buscar no Orthanc
+                        </a>
+                        <a href="{{ url_for('assistente.buscar_paciente') }}" class="btn btn-ultraclin">
+                            <i class="bi bi-person-search me-1"></i>
+                            Buscar Paciente
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-warning text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Pendentes de Laudo</h5>
+                                <h2 class="display-4">{{ total_pendentes if total_pendentes is defined else 0 }}</h2>
+                                <small>Aguardando laudo médico</small>
+                            </div>
+                            <i class="bi bi-hourglass-split fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Coletados</h5>
+                                <h2 class="display-4">{{ total_coletados if total_coletados is defined else 0 }}</h2>
+                                <small>Exames realizados</small>
+                            </div>
+                            <i class="bi bi-camera fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title">Laudados</h5>
+                                <h2 class="display-4">{{ total_laudados if total_laudados is defined else 0 }}</h2>
+                                <small>Com laudo disponível</small>
+                            </div>
+                            <i class="bi bi-file-earmark-medical fs-1 opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Lista de Exames -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-list-ul me-2"></i>
+                                Lista de Exames de Imagem
+                            </h5>
+                            <div>
+                                <div class="btn-group" role="group" aria-label="Filtros">
+                                    <a href="{{ url_for('assistente.exames', status='todos') }}" 
+                                       class="btn btn-sm {{ 'btn-ultraclin' if status_filtro == 'todos' or not status_filtro else 'btn-outline-secondary' }}">
+                                        Todos
+                                    </a>
+                                    <a href="{{ url_for('assistente.exames', status='pendente') }}" 
+                                       class="btn btn-sm {{ 'btn-warning' if status_filtro == 'pendente' else 'btn-outline-warning' }}">
+                                        Pendentes
+                                    </a>
+                                    <a href="{{ url_for('assistente.exames', status='laudado') }}" 
+                                       class="btn btn-sm {{ 'btn-success' if status_filtro == 'laudado' else 'btn-outline-success' }}">
+                                        Laudados
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% if exames %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Paciente</th>
+                                        <th>Tipo de Exame</th>
+                                        <th>Data Realização</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for exame in exames %}
+                                    <tr>
+                                        <td>
+                                            <strong>#{{ exame.id }}</strong>
+                                            {% if exame.orthanc_study_uid %}
+                                            <br><small class="text-muted">{{ exame.orthanc_study_uid[:12] }}...</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-initial bg-light-primary rounded-circle me-2">
+                                                    <i class="bi bi-person"></i>
+                                                </div>
+                                                <div>
+                                                    <strong>{{ exame.paciente.usuario.nome_completo }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        CPF: {{ exame.paciente.usuario.cpf[:3] }}.{{ exame.paciente.usuario.cpf[3:6] }}.{{ exame.paciente.usuario.cpf[6:9] }}-{{ exame.paciente.usuario.cpf[9:] }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ exame.tipo_exame }}</span>
+                                            {% if exame.descricao %}
+                                                <br><small class="text-muted">{{ exame.descricao[:50] }}{% if exame.descricao|length > 50 %}...{% endif %}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if exame.data_realizacao %}
+                                            <strong>{{ exame.data_realizacao.strftime('%d/%m/%Y') }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ exame.data_realizacao.strftime('%H:%M') }}</small>
+                                            {% else %}
+                                            <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if exame.status == 'pendente' %}
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="bi bi-hourglass-split me-1"></i>
+                                                Pendente
+                                            </span>
+                                            {% elif exame.status == 'laudado' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>
+                                                Laudado
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">
+                                                {{ exame.status|capitalize }}
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                {% if exame.orthanc_study_uid %}
+                                                <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=exame.orthanc_study_uid) }}" 
+                                                   class="btn btn-sm btn-outline-info" title="Visualizar imagens" target="_blank">
+                                                    <i class="bi bi-camera"></i>
+                                                </a>
+                                                {% endif %}
+                                                {% if exame.status == 'pendente' %}
+                                                <a href="{{ url_for('assistente.anexar_laudo', exame_id=exame.id) }}" 
+                                                   class="btn btn-sm btn-outline-success" title="Anexar laudo">
+                                                    <i class="bi bi-file-earmark-plus"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-camera-video text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum exame de imagem encontrado</h5>
+                            <p class="text-muted">
+                                {% if status_filtro and status_filtro != 'todos' %}
+                                    Não há exames com o status "{{ status_filtro }}" no momento.
+                                {% else %}
+                                    Não há exames de imagem cadastrados no sistema.
+                                {% endif %}
+                            </p>
+                            <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-ultraclin">
+                                <i class="bi bi-search me-2"></i>
+                                Buscar Exames no Orthanc
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .avatar-initial {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .btn-group .btn {
+        margin-right: 0;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .display-4 {
+        font-weight: 300;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .btn-outline-ultraclin {
+        color: #FF7F00;
+        border-color: #FF7F00;
+    }
+
+    .btn-outline-ultraclin:hover {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+    </style>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

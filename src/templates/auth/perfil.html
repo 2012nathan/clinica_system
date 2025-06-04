@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Meu Perfil</h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="nome_completo">Nome Completo</label>
+                            <input type="text" class="form-control" id="nome_completo" name="nome_completo" 
+                                   value="{{ usuario.nome_completo }}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="cpf">CPF</label>
+                            <input type="text" class="form-control" id="cpf" value="{{ usuario.cpf }}" readonly>
+                            <small class="form-text text-muted">O CPF não pode ser alterado.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">E-mail</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ usuario.email }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telefone">Telefone</label>
+                            <input type="text" class="form-control" id="telefone" name="telefone" 
+                                   value="{{ usuario.telefone }}">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tipo_perfil">Tipo de Perfil</label>
+                            <input type="text" class="form-control" id="tipo_perfil" 
+                                   value="{{ usuario.tipo_perfil.title() }}" readonly>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Atualizar Perfil</button>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-secondary">Voltar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

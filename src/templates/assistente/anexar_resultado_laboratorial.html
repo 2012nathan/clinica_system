@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anexar Resultado - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Anexar Resultado de Exame Laboratorial{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="text-ultraclin">Anexar Resultado de Exame</h2>
+            <p class="text-muted">Exame #{{ exame.id }} - {{ exame.tipo_exame }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Informações do Exame</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p><strong>Paciente:</strong> {{ exame.paciente.usuario.nome_completo }}</p>
+                            <p><strong>CPF:</strong> {{ exame.paciente.usuario.cpf }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Tipo de Exame:</strong> {{ exame.tipo_exame }}</p>
+                            <p><strong>Data de Solicitação:</strong> {{ exame.data_solicitacao.strftime('%d/%m/%Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Anexar Resultado</h5>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('laboratorio.anexar_resultado', exame_id=exame.id) }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="arquivo" class="form-label">Arquivo do Resultado (PDF) <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="arquivo" name="arquivo" accept=".pdf" required>
+                            <div class="form-text">Apenas arquivos PDF são aceitos. Tamanho máximo: 10MB.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea class="form-control" id="observacoes" name="observacoes" rows="3">{{ exame.observacoes or '' }}</textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Ao anexar o resultado, o status do exame será alterado para "Resultado Disponível" e o paciente poderá visualizá-lo no aplicativo.
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('laboratorio.exame_laboratorial_detalhes', id=exame.id) }}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-ultraclin">Anexar Resultado</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">Instruções</h5>
+                </div>
+                <div class="card-body">
+                    <p>Para anexar o resultado do exame laboratorial:</p>
+                    <ol>
+                        <li>Selecione o arquivo PDF do resultado</li>
+                        <li>Adicione observações relevantes, se necessário</li>
+                        <li>Clique em "Anexar Resultado"</li>
+                    </ol>
+                    <p>O paciente será notificado automaticamente quando o resultado estiver disponível.</p>
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-exclamation-triangle"></i> Certifique-se de que o arquivo PDF contém o resultado correto antes de anexá-lo.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

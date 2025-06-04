@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}Meus Exames - UltraClin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 text-ultraclin">Meus Exames</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('paciente.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Meus Exames</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('paciente.meus_exames') }}" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="todos" {% if request.args.get('status') == 'todos' or not request.args.get('status') %}selected{% endif %}>Todos</option>
+                                <option value="pendente" {% if request.args.get('status') == 'pendente' %}selected{% endif %}>Pendentes</option>
+                                <option value="coletado" {% if request.args.get('status') == 'coletado' %}selected{% endif %}>Coletados</option>
+                                <option value="resultado_disponivel" {% if request.args.get('status') == 'resultado_disponivel' %}selected{% endif %}>Resultados Disponíveis</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_inicio" class="form-label">Data Início</label>
+                            <input type="date" class="form-control" id="data_inicio" name="data_inicio" value="{{ request.args.get('data_inicio', '') }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="data_fim" class="form-label">Data Fim</label>
+                            <input type="date" class="form-control" id="data_fim" name="data_fim" value="{{ request.args.get('data_fim', '') }}">
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-search me-1"></i>
+                                Filtrar
+                            </button>
+                            <a href="{{ url_for('paciente.meus_exames') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>
+                                Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <ul class="nav nav-tabs" id="examesTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="todos-tab" data-bs-toggle="tab" data-bs-target="#todos" type="button" role="tab" aria-controls="todos" aria-selected="true">
+                        Todos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pendentes-tab" data-bs-toggle="tab" data-bs-target="#pendentes" type="button" role="tab" aria-controls="pendentes" aria-selected="false">
+                        Pendentes
+                        {% if exames_pendentes and exames_pendentes|length > 0 %}
+                        <span class="badge bg-warning text-dark ms-1">{{ exames_pendentes|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="coletados-tab" data-bs-toggle="tab" data-bs-target="#coletados" type="button" role="tab" aria-controls="coletados" aria-selected="false">
+                        Coletados
+                        {% if exames_coletados and exames_coletados|length > 0 %}
+                        <span class="badge bg-info ms-1">{{ exames_coletados|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="resultados-tab" data-bs-toggle="tab" data-bs-target="#resultados" type="button" role="tab" aria-controls="resultados" aria-selected="false">
+                        Resultados Disponíveis
+                        {% if exames_resultados and exames_resultados|length > 0 %}
+                        <span class="badge bg-success ms-1">{{ exames_resultados|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Conteúdo das Abas -->
+    <div class="tab-content" id="examesTabContent">
+        <!-- Todos os Exames -->
+        <div class="tab-pane fade show active" id="todos" role="tabpanel" aria-labelledby="todos-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>
+                        Todos os Exames
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exames and exames|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo de Exame</th>
+                                    <th>Médico Solicitante</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exame in exames %}
+                                <tr>
+                                    <td>{{ exame.data_exame.strftime('%d/%m/%Y') if exame.data_exame else 'N/A' }}</td>
+                                    <td>{{ exame.tipo_exame }}</td>
+                                    <td>{{ exame.medico_solicitante }}</td>
+                                    <td>
+                                        {% if exame.status == 'pendente' %}
+                                        <span class="badge bg-warning text-dark">Pendente</span>
+                                        {% elif exame.status == 'coletado' %}
+                                        <span class="badge bg-info">Coletado</span>
+                                        {% elif exame.status == 'resultado_disponivel' %}
+                                        <span class="badge bg-success">Resultado Disponível</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ exame.status|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.exame_detalhes', id=exame.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        {% if exame.status == 'resultado_disponivel' %}
+                                        <a href="{{ url_for('paciente.visualizar_resultado', id=exame.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-file-earmark-text"></i> Resultado
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhum exame encontrado com os filtros selecionados.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Exames Pendentes -->
+        <div class="tab-pane fade" id="pendentes" role="tabpanel" aria-labelledby="pendentes-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-hourglass-split me-2"></i>
+                        Exames Pendentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exames_pendentes and exames_pendentes|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo de Exame</th>
+                                    <th>Médico Solicitante</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exame in exames_pendentes %}
+                                <tr>
+                                    <td>{{ exame.data_exame.strftime('%d/%m/%Y') if exame.data_exame else 'N/A' }}</td>
+                                    <td>{{ exame.tipo_exame }}</td>
+                                    <td>{{ exame.medico_solicitante }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.exame_detalhes', id=exame.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhum exame pendente encontrado.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Exames Coletados -->
+        <div class="tab-pane fade" id="coletados" role="tabpanel" aria-labelledby="coletados-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-flask me-2"></i>
+                        Exames Coletados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exames_coletados and exames_coletados|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo de Exame</th>
+                                    <th>Médico Solicitante</th>
+                                    <th>Data Coleta</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exame in exames_coletados %}
+                                <tr>
+                                    <td>{{ exame.data_exame.strftime('%d/%m/%Y') if exame.data_exame else 'N/A' }}</td>
+                                    <td>{{ exame.tipo_exame }}</td>
+                                    <td>{{ exame.medico_solicitante }}</td>
+                                    <td>{{ exame.data_coleta.strftime('%d/%m/%Y') if exame.data_coleta else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.exame_detalhes', id=exame.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhum exame coletado encontrado.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados Disponíveis -->
+        <div class="tab-pane fade" id="resultados" role="tabpanel" aria-labelledby="resultados-tab">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-check-circle me-2"></i>
+                        Resultados Disponíveis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if exames_resultados and exames_resultados|length > 0 %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo de Exame</th>
+                                    <th>Médico Solicitante</th>
+                                    <th>Data Resultado</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exame in exames_resultados %}
+                                <tr>
+                                    <td>{{ exame.data_exame.strftime('%d/%m/%Y') if exame.data_exame else 'N/A' }}</td>
+                                    <td>{{ exame.tipo_exame }}</td>
+                                    <td>{{ exame.medico_solicitante }}</td>
+                                    <td>{{ exame.data_resultado.strftime('%d/%m/%Y') if exame.data_resultado else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('paciente.exame_detalhes', id=exame.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> Detalhes
+                                        </a>
+                                        <a href="{{ url_for('paciente.visualizar_resultado', id=exame.id) }}" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-file-earmark-text"></i> Resultado
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Nenhum resultado disponível encontrado.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Ativar a aba correspondente ao status selecionado no filtro
+        const statusParam = new URLSearchParams(window.location.search).get('status');
+        if (statusParam) {
+            const tabMap = {
+                'pendente': 'pendentes-tab',
+                'coletado': 'coletados-tab',
+                'resultado_disponivel': 'resultados-tab',
+                'todos': 'todos-tab'
+            };
+            
+            const tabId = tabMap[statusParam];
+            if (tabId) {
+                const tab = document.getElementById(tabId);
+                if (tab) {
+                    const bsTab = new bootstrap.Tab(tab);
+                    bsTab.show();
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

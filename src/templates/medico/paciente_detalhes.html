@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paciente - Sistema de Gerenciamento da Clínica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Detalhes do Paciente{% endblock %}
+
+    {% block content %}
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>{{ paciente.usuario.nome_completo }}</h2>
+            <p class="text-muted">
+                CPF: {{ paciente.usuario.cpf }} | 
+                Data de Nascimento: {{ paciente.usuario.data_nascimento.strftime('%d/%m/%Y') }} | 
+                Email: {{ paciente.usuario.email }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('medico.novo_documento', paciente_id=paciente.id) }}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-plus"></i> Nova Receita/Atestado
+                </a>
+                {% if cartao_gestante %}
+                <a href="{{ url_for('medico.cartao_gestante', paciente_id=paciente.id) }}" class="btn btn-success">
+                    <i class="bi bi-journal-medical"></i> Cartão Gestante
+                </a>
+                {% else %}
+                <a href="{{ url_for('medico.cartao_gestante', paciente_id=paciente.id) }}" class="btn btn-outline-success">
+                    <i class="bi bi-journal-plus"></i> Criar Cartão Gestante
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">Informações</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="historico-tab" data-bs-toggle="tab" data-bs-target="#historico" type="button" role="tab" aria-controls="historico" aria-selected="false">Histórico de Consultas</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button" role="tab" aria-controls="documentos" aria-selected="false">Documentos</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active p-3 border border-top-0 rounded-bottom" id="info" role="tabpanel" aria-labelledby="info-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Dados Pessoais</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Nome:</th>
+                                    <td>{{ paciente.usuario.nome_completo }}</td>
+                                </tr>
+                                <tr>
+                                    <th>CPF:</th>
+                                    <td>{{ paciente.usuario.cpf }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Data de Nascimento:</th>
+                                    <td>{{ paciente.usuario.data_nascimento.strftime('%d/%m/%Y') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ paciente.usuario.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Telefone:</th>
+                                    <td>{{ paciente.usuario.telefone }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Dados Complementares</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Cartão SUS:</th>
+                                    <td>{{ paciente.cartao_sus or 'Não informado' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Convênio:</th>
+                                    <td>{{ paciente.convenio or 'Não informado' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Número do Convênio:</th>
+                                    <td>{{ paciente.numero_convenio or 'Não informado' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Observações:</th>
+                                    <td>{{ paciente.observacoes or 'Não há observações' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="historico" role="tabpanel" aria-labelledby="historico-tab">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Status</th>
+                                    <th>Motivo</th>
+                                    <th>Observações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for agendamento in agendamentos %}
+                                <tr>
+                                    <td>{{ agendamento.data_hora_inicio.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>
+                                        {% if agendamento.status == 'agendado' %}
+                                        <span class="badge bg-primary">Agendado</span>
+                                        {% elif agendamento.status == 'confirmado' %}
+                                        <span class="badge bg-info">Confirmado</span>
+                                        {% elif agendamento.status == 'realizado' %}
+                                        <span class="badge bg-success">Realizado</span>
+                                        {% elif agendamento.status == 'cancelado' %}
+                                        <span class="badge bg-danger">Cancelado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ agendamento.motivo_consulta }}</td>
+                                    <td>{{ agendamento.observacoes }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not agendamentos %}
+                    <div class="alert alert-info">
+                        Não há histórico de consultas para este paciente.
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="tab-pane fade p-3 border border-top-0 rounded-bottom" id="documentos" role="tabpanel" aria-labelledby="documentos-tab">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Título</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for documento in documentos %}
+                                <tr>
+                                    <td>{{ documento.data_criacao.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        {% if documento.tipo == 'receita' %}
+                                        <span class="badge bg-primary">Receita</span>
+                                        {% elif documento.tipo == 'atestado' %}
+                                        <span class="badge bg-info">Atestado</span>
+                                        {% elif documento.tipo == 'laudo' %}
+                                        <span class="badge bg-success">Laudo</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">Outro</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ documento.titulo }}</td>
+                                    <td>
+                                        {% if documento.status == 'pendente' %}
+                                        <span class="badge bg-warning">Pendente</span>
+                                        {% elif documento.status == 'disponivel' %}
+                                        <span class="badge bg-success">Disponível</span>
+                                        {% elif documento.status == 'visualizado' %}
+                                        <span class="badge bg-info">Visualizado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ documento.arquivo_caminho }}" class="btn btn-sm btn-primary" target="_blank">
+                                            <i class="bi bi-file-earmark-text"></i> Visualizar
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if not documentos %}
+                    <div class="alert alert-info">
+                        Não há documentos para este paciente.
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('medico.novo_documento', paciente_id=paciente.id) }}" class="btn btn-primary mt-2">
+                        <i class="bi bi-file-earmark-plus"></i> Novo Documento
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anexar Laudo - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+    <style>
+        .drop-zone {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+        
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #0056b3;
+            background-color: #e7f3ff;
+            transform: scale(1.02);
+        }
+        
+        .drop-zone.success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .drop-zone.error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        .file-preview {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .dicom-preview {
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Anexar Laudo - Exame #{{ exame.id }}{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Anexar Laudo</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.exames') }}">Exames</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}">Exame #{{ exame.id }}</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Anexar Laudo</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar ao Exame
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Informações do Exame -->
+            <div class="col-lg-4">
+                <!-- Dados do Exame -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-clipboard-data me-2"></i>
+                            Dados do Exame
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>ID:</strong> #{{ exame.id }}</p>
+                        <p><strong>Paciente:</strong> {{ exame.paciente.usuario.nome_completo }}</p>
+                        <p><strong>CPF:</strong> {{ exame.paciente.usuario.cpf[:3] }}.{{ exame.paciente.usuario.cpf[3:6] }}.{{ exame.paciente.usuario.cpf[6:9] }}-{{ exame.paciente.usuario.cpf[9:] }}</p>
+                        <p><strong>Tipo:</strong> {{ exame.tipo_exame }}</p>
+                        <p><strong>Data:</strong> {{ exame.data_realizacao.strftime('%d/%m/%Y') if exame.data_realizacao else 'N/A' }}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-info">{{ exame.get_status_display() }}</span>
+                        </p>
+                        {% if exame.medico_solicitante %}
+                        <p><strong>Médico:</strong> {{ exame.medico_solicitante }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Preview DICOM -->
+                {% if exame.orthanc_study_uid %}
+                <div class="card shadow-sm mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-images me-2"></i>
+                            DICOM Vinculado
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="mb-3">Este exame possui DICOM vinculado</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=exame.orthanc_study_uid) }}" 
+                               target="_blank" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye me-1"></i>
+                                Visualizar Imagens
+                            </a>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Study: {{ exame.orthanc_study_uid[:8] }}...</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Instruções -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Instruções
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Para anexar o laudo:</strong></p>
+                        <ol class="small">
+                            <li>Arraste o arquivo PDF para a área de upload ou clique para selecionar</li>
+                            <li>Preencha o título e descrição</li>
+                            <li>Confira os dados e clique em "Anexar Laudo"</li>
+                        </ol>
+                        
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Importante:</strong> Apenas arquivos PDF são aceitos. Tamanho máximo: 10MB.
+                        </div>
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Após anexar, o paciente receberá acesso imediato ao laudo no aplicativo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulário de Upload -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-plus me-2"></i>
+                            Anexar Laudo em PDF
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data" id="formUpload">
+                            <!-- Área de Upload -->
+                            <div class="mb-4">
+                                <label class="form-label">Arquivo do Laudo (PDF) <span class="text-danger">*</span></label>
+                                
+                                <div class="drop-zone" id="dropZone" onclick="document.getElementById('arquivo').click()">
+                                    <div id="dropZoneContent">
+                                        <i class="bi bi-cloud-upload text-primary" style="font-size: 3rem;"></i>
+                                        <h5 class="mt-3 text-primary">Arraste o arquivo PDF aqui</h5>
+                                        <p class="text-muted">ou clique para selecionar do computador</p>
+                                        <small class="text-muted">Apenas PDF • Máximo 10MB</small>
+                                    </div>
+                                </div>
+                                
+                                <input type="file" 
+                                       class="form-control d-none" 
+                                       id="arquivo" 
+                                       name="arquivo" 
+                                       accept=".pdf" 
+                                       required
+                                       onchange="handleFileSelect(this.files[0])">
+                                
+                                <!-- Preview do arquivo -->
+                                <div id="filePreview" class="file-preview" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-file-earmark-pdf text-danger me-3" style="font-size: 2rem;"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 id="fileName" class="mb-1"></h6>
+                                            <small id="fileSize" class="text-muted"></small>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removerArquivo()">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dados do Laudo -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="titulo" class="form-label">Título do Laudo <span class="text-danger">*</span></label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="titulo" 
+                                           name="titulo" 
+                                           required
+                                           placeholder="Ex: Laudo de Ultrassom Morfológico"
+                                           value="Laudo de {{ exame.tipo_exame }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <label for="descricao" class="form-label">Descrição/Observações</label>
+                                    <textarea class="form-control" 
+                                              id="descricao" 
+                                              name="descricao" 
+                                              rows="3"
+                                              placeholder="Observações adicionais sobre o laudo (opcional)"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Resumo Final -->
+                            <div class="card border-success mb-4" id="resumoFinal" style="display: none;">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="card-title mb-0">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Resumo Final
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Exame:</strong> {{ exame.tipo_exame }}</p>
+                                            <p><strong>Paciente:</strong> {{ exame.paciente.usuario.nome_completo }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p><strong>Arquivo:</strong> <span id="resumoArquivo">-</span></p>
+                                            <p><strong>Título:</strong> <span id="resumoTitulo">-</span></p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Ao anexar o laudo, o status do exame será alterado para <strong>"Laudado"</strong> 
+                                        e o paciente terá acesso imediato no aplicativo.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botões -->
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('assistente.exame_detalhes', id=exame.id) }}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle me-1"></i>
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success" id="btnAnexar" disabled>
+                                    <i class="bi bi-file-earmark-plus me-1"></i>
+                                    Anexar Laudo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        let arquivoSelecionado = null;
+
+        // Configuração do drag and drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('arquivo');
+
+        // Prevenir comportamento padrão do browser
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Destacar zona de drop quando arquivo estiver sobre ela
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Lidar com arquivos dropados
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropZone.classList.add('dragover');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        }
+
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            // Validar tipo de arquivo
+            if (file.type !== 'application/pdf') {
+                mostrarErroDropZone('Apenas arquivos PDF são aceitos!');
+                return;
+            }
+
+            // Validar tamanho (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                mostrarErroDropZone('Arquivo muito grande! Tamanho máximo: 10MB');
+                return;
+            }
+
+            arquivoSelecionado = file;
+            
+            // Atualizar input file
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            fileInput.files = dataTransfer.files;
+
+            // Mostrar preview
+            mostrarPreviewArquivo(file);
+            
+            // Mostrar sucesso na drop zone
+            mostrarSucessoDropZone();
+            
+            // Verificar se pode habilitar botão
+            verificarFormulario();
+        }
+
+        function mostrarPreviewArquivo(file) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatarTamanho(file.size);
+            document.getElementById('filePreview').style.display = 'block';
+        }
+
+        function removerArquivo() {
+            arquivoSelecionado = null;
+            fileInput.value = '';
+            document.getElementById('filePreview').style.display = 'none';
+            resetarDropZone();
+            verificarFormulario();
+        }
+
+        function mostrarErroDropZone(mensagem) {
+            const dropZoneContent = document.getElementById('dropZoneContent');
+            dropZone.classList.add('error');
+            dropZoneContent.innerHTML = `
+                <i class="bi bi-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-danger">Erro no arquivo</h5>
+                <p class="text-danger">${mensagem}</p>
+                <small class="text-muted">Clique para tentar novamente</small>
+            `;
+            
+            setTimeout(resetarDropZone, 3000);
+        }
+
+        function mostrarSucessoDropZone() {
+            const dropZoneContent = document.getElementById('dropZoneContent');
+            dropZone.classList.add('success');
+            dropZoneContent.innerHTML = `
+                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-success">Arquivo selecionado!</h5>
+                <p class="text-success">PDF pronto para upload</p>
+                <small class="text-muted">Clique para trocar o arquivo</small>
+            `;
+        }
+
+        function resetarDropZone() {
+            const dropZoneContent = document.getElementById('dropZoneContent');
+            dropZone.classList.remove('success', 'error');
+            dropZoneContent.innerHTML = `
+                <i class="bi bi-cloud-upload text-primary" style="font-size: 3rem;"></i>
+                <h5 class="mt-3 text-primary">Arraste o arquivo PDF aqui</h5>
+                <p class="text-muted">ou clique para selecionar do computador</p>
+                <small class="text-muted">Apenas PDF • Máximo 10MB</small>
+            `;
+        }
+
+        function formatarTamanho(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function verificarFormulario() {
+            const titulo = document.getElementById('titulo').value.trim();
+            const temArquivo = arquivoSelecionado !== null;
+            
+            const podeAnexar = titulo && temArquivo;
+            document.getElementById('btnAnexar').disabled = !podeAnexar;
+            
+            if (podeAnexar) {
+                mostrarResumoFinal();
+            } else {
+                document.getElementById('resumoFinal').style.display = 'none';
+            }
+        }
+
+        function mostrarResumoFinal() {
+            document.getElementById('resumoArquivo').textContent = arquivoSelecionado ? arquivoSelecionado.name : '-';
+            document.getElementById('resumoTitulo').textContent = document.getElementById('titulo').value || '-';
+            document.getElementById('resumoFinal').style.display = 'block';
+        }
+
+        // Monitorar mudanças no título
+        document.getElementById('titulo').addEventListener('input', verificarFormulario);
+
+        // Validação do formulário antes do submit
+        document.getElementById('formUpload').addEventListener('submit', function(e) {
+            if (!arquivoSelecionado) {
+                e.preventDefault();
+                alert('Selecione um arquivo PDF primeiro.');
+                return false;
+            }
+
+            const titulo = document.getElementById('titulo').value.trim();
+            if (!titulo) {
+                e.preventDefault();
+                alert('Preencha o título do laudo.');
+                document.getElementById('titulo').focus();
+                return false;
+            }
+
+            // Mostrar loading
+            const btnAnexar = document.getElementById('btnAnexar');
+            const textoOriginal = btnAnexar.innerHTML;
+            btnAnexar.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Anexando...';
+            btnAnexar.disabled = true;
+
+            // Progress simulation (opcional)
+            let progress = 0;
+            const progressInterval = setInterval(function() {
+                progress += Math.random() * 15;
+                if (progress > 95) {
+                    clearInterval(progressInterval);
+                    progress = 95;
+                }
+                btnAnexar.innerHTML = `<i class="bi bi-hourglass-split me-1"></i> Anexando... ${Math.round(progress)}%`;
+            }, 200);
+        });
+
+        // Verificação inicial
+        verificarFormulario();
+    </script>
+    {% endblock %}
+</body>
+</html>

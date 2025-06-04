@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Exame - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Detalhes do Exame #{{ exame.id }}{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Detalhes do Exame #{{ exame.id }}</h2>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.dashboard') }}">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="{{ url_for('assistente.exames') }}">Exames</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Exame #{{ exame.id }}</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.exames') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar aos Exames
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Informações Principais -->
+            <div class="col-lg-8">
+                <!-- Dados Básicos do Exame -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-clipboard-data me-2"></i>
+                                Informações do Exame
+                            </h5>
+                            <div>
+                                {% if exame.is_gravacao() %}
+                                    <span class="badge bg-warning fs-6">
+                                        <i class="bi bi-camera-video me-1"></i>
+                                        Gravação de US
+                                    </span>
+                                {% elif exame.is_complemento() %}
+                                    <span class="badge bg-info fs-6">
+                                        <i class="bi bi-plus-circle me-1"></i>
+                                        Complemento
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary fs-6">
+                                        <i class="bi bi-camera me-1"></i>
+                                        Exame Normal
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Paciente</label>
+                                <p class="form-control-plaintext">{{ exame.paciente.usuario.nome_completo }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">CPF</label>
+                                <p class="form-control-plaintext">{{ exame.paciente.usuario.cpf[:3] }}.{{ exame.paciente.usuario.cpf[3:6] }}.{{ exame.paciente.usuario.cpf[6:9] }}-{{ exame.paciente.usuario.cpf[9:] }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Tipo de Exame</label>
+                                <p class="form-control-plaintext">{{ exame.tipo_exame }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Status</label>
+                                <p class="form-control-plaintext">
+                                    {% if exame.status == 'pendente' %}
+                                    <span class="badge bg-warning text-dark fs-6">Pendente</span>
+                                    {% elif exame.status == 'coletado' %}
+                                    <span class="badge bg-info fs-6">Coletado</span>
+                                    {% elif exame.status == 'laudado' %}
+                                    <span class="badge bg-success fs-6">Laudado</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Data de Realização</label>
+                                <p class="form-control-plaintext">{{ exame.data_realizacao.strftime('%d/%m/%Y %H:%M') if exame.data_realizacao else 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Médico Solicitante</label>
+                                <p class="form-control-plaintext">{{ exame.medico_solicitante if exame.medico_solicitante else 'Não informado' }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if exame.prestador_nome or exame.prestador_codigo %}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Prestador</label>
+                                <p class="form-control-plaintext">{{ exame.prestador_nome or 'N/A' }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Código Prestador</label>
+                                <p class="form-control-plaintext">{{ exame.prestador_codigo or 'N/A' }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if exame.descricao %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Descrição</label>
+                            <p class="form-control-plaintext">{{ exame.descricao }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Campos Específicos por Tipo -->
+                {% if exame.is_gravacao() %}
+                <!-- Gravação de US -->
+                <div class="card shadow-sm mb-4 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-camera-video me-2"></i>
+                            Dados da Gravação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if exame.link_gravacao %}
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-muted">Link da Gravação</label>
+                                <div class="input-group">
+                                    <input type="url" class="form-control" value="{{ exame.link_gravacao }}" readonly>
+                                    <a href="{{ exame.link_gravacao }}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right"></i> Abrir
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Senha</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" value="{{ exame.senha_gravacao or '' }}" readonly id="senhaGravacao">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha()">
+                                        <i class="bi bi-eye" id="iconeSenha"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% if exame.observacoes_gravacao %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Observações da Gravação</label>
+                            <p class="form-control-plaintext">{{ exame.observacoes_gravacao }}</p>
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Link da gravação não foi fornecido ainda.
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% elif exame.is_complemento() %}
+                <!-- Exame Complementar -->
+                <div class="card shadow-sm mb-4 border-info">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Dados do Complemento
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if exame.exame_principal %}
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-muted">Exame Principal</label>
+                                <p class="form-control-plaintext">
+                                    <a href="{{ url_for('assistente.exame_detalhes', id=exame.exame_principal.id) }}" class="text-decoration-none">
+                                        #{{ exame.exame_principal.id }} - {{ exame.exame_principal.tipo_exame }}
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Data do Exame Principal</label>
+                                <p class="form-control-plaintext">{{ exame.exame_principal.data_realizacao.strftime('%d/%m/%Y') if exame.exame_principal.data_realizacao else 'N/A' }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if exame.observacoes_complemento %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Observações do Complemento</label>
+                            <p class="form-control-plaintext">{{ exame.observacoes_complemento }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- Exame Normal - DICOM e Laudo -->
+                {% if exame.orthanc_study_uid %}
+                <div class="card shadow-sm mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-images me-2"></i>
+                            DICOM Vinculado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label text-muted">Study UID</label>
+                                <p class="form-control-plaintext font-monospace">{{ exame.orthanc_study_uid }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted">Ações</label>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=exame.orthanc_study_uid) }}" 
+                                       target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Visualizar Imagens
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if laudo %}
+                <div class="card shadow-sm mb-4 border-success">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-file-earmark-text me-2"></i>
+                            Laudo Anexado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Título</label>
+                                <p class="form-control-plaintext">{{ laudo.titulo }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Data de Criação</label>
+                                <p class="form-control-plaintext">{{ laudo.data_criacao.strftime('%d/%m/%Y %H:%M') if laudo.data_criacao else 'N/A' }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if laudo.descricao %}
+                        <div class="mb-3">
+                            <label class="form-label text-muted">Descrição</label>
+                            <p class="form-control-plaintext">{{ laudo.descricao }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2 d-md-flex">
+                            <a href="{{ url_for('static', filename='laudos/' + laudo.arquivo_caminho.split('/')[-1]) }}" 
+                               target="_blank" class="btn btn-success">
+                                <i class="bi bi-file-earmark-pdf me-1"></i>
+                                Visualizar Laudo
+                            </a>
+                            <button type="button" class="btn btn-outline-danger" onclick="confirmarRemocaoLaudo()">
+                                <i class="bi bi-trash me-1"></i>
+                                Remover Laudo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Sidebar de Ações -->
+            <div class="col-lg-4">
+                <!-- Status e Ações -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-gear me-2"></i>
+                            Ações
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if exame.is_gravacao() %}
+                            <!-- Ações para Gravação -->
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Gravação Finalizada</strong><br>
+                                O link da gravação está disponível para o paciente.
+                            </div>
+                            
+                        {% elif exame.is_complemento() %}
+                            <!-- Ações para Complemento -->
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Complemento Registrado</strong><br>
+                                Este exame foi marcado como complemento.
+                            </div>
+                            
+                        {% else %}
+                            <!-- Ações para Exame Normal -->
+                            {% if exame.status == 'pendente' %}
+                                {% if not exame.orthanc_study_uid %}
+                                <div class="d-grid gap-2 mb-3">
+                                    <a href="{{ url_for('assistente.vincular_dicom', exame_id=exame.id) }}" class="btn btn-primary">
+                                        <i class="bi bi-link-45deg me-1"></i>
+                                        Vincular DICOM
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                            {% elif exame.status == 'coletado' %}
+                                {% if not laudo %}
+                                <div class="d-grid gap-2 mb-3">
+                                    <a href="{{ url_for('assistente.anexar_laudo', exame_id=exame.id) }}" class="btn btn-success">
+                                        <i class="bi bi-file-earmark-plus me-1"></i>
+                                        Anexar Laudo
+                                    </a>
+                                </div>
+                                {% endif %}
+                                
+                            {% elif exame.status == 'laudado' %}
+                                <div class="alert alert-success">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <strong>Exame Finalizado</strong><br>
+                                    O laudo está disponível para o paciente.
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        <!-- Ações Comuns -->
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('assistente.paciente_detalhes', cpf=exame.paciente.usuario.cpf) }}" class="btn btn-outline-primary">
+                                <i class="bi bi-person-circle me-1"></i>
+                                Ver Paciente
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações Técnicas -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Informações Técnicas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>ID do Exame:</strong> {{ exame.id }}</p>
+                        <p><strong>Data de Cadastro:</strong> {{ exame.data_criacao.strftime('%d/%m/%Y %H:%M') if exame.data_criacao else 'N/A' }}</p>
+                        {% if exame.shosp_agendamento_id %}
+                            <p><strong>Agendamento SHOSP:</strong> {{ exame.shosp_agendamento_id }}</p>
+                        {% endif %}
+                        {% if exame.assistente %}
+                            <p><strong>Cadastrado por:</strong> {{ exame.assistente.nome_completo }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Confirmação de Remoção de Laudo -->
+    {% if laudo %}
+    <div class="modal fade" id="modalRemoverLaudo" tabindex="-1" aria-labelledby="modalRemoverLaudoLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRemoverLaudoLabel">Remover Laudo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Atenção:</strong> Esta ação não pode ser desfeita.
+                    </div>
+                    <p>Tem certeza que deseja remover o laudo <strong>{{ laudo.titulo }}</strong>?</p>
+                    <p>O arquivo será excluído permanentemente e o status do exame voltará para "Coletado".</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ url_for('assistente.remover_laudo', exame_id=exame.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-danger">Remover Laudo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        function toggleSenha() {
+            const campo = document.getElementById('senhaGravacao');
+            const icone = document.getElementById('iconeSenha');
+            
+            if (campo.type === 'password') {
+                campo.type = 'text';
+                icone.className = 'bi bi-eye-slash';
+            } else {
+                campo.type = 'password';
+                icone.className = 'bi bi-eye';
+            }
+        }
+
+        function confirmarRemocaoLaudo() {
+            const modal = new bootstrap.Modal(document.getElementById('modalRemoverLaudo'));
+            modal.show();
+        }
+    </script>
+    {% endblock %}
+</body>
+</html>

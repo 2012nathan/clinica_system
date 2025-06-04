@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Exame do Orthanc - UltraClin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ultraclin.css') }}">
+</head>
+<body>
+    {% extends 'base.html' %}
+
+    {% block title %}Cadastrar Exame do Orthanc - UltraClin{% endblock %}
+
+    {% block content %}
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1 text-ultraclin">Cadastrar Exame do Orthanc</h2>
+                        <p class="text-muted mb-0">
+                            <i class="bi bi-plus-circle me-2"></i>
+                            Vincule um estudo DICOM a um paciente do sistema
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>
+                            Voltar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Formulário de Cadastro -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-form-check me-2"></i>
+                            Dados do Exame
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('assistente.cadastrar_exame_orthanc', orthanc_study_uid=estudo.ID) }}">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="paciente_id" class="form-label">Paciente <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="paciente_id" name="paciente_id" required>
+                                        <option value="">Selecione o paciente</option>
+                                        {% for paciente in pacientes %}
+                                        <option value="{{ paciente.id }}">
+                                            {{ paciente.usuario.nome_completo }} 
+                                            (CPF: {{ paciente.usuario.cpf[:3] }}.{{ paciente.usuario.cpf[3:6] }}.{{ paciente.usuario.cpf[6:9] }}-{{ paciente.usuario.cpf[9:] }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Não encontrou o paciente? 
+                                        <a href="{{ url_for('assistente.buscar_paciente') }}" class="text-decoration-none">
+                                            Busque primeiro pelo CPF
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="tipo_exame" class="form-label">Tipo de Exame <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="tipo_exame" name="tipo_exame" required>
+                                        <option value="">Selecione o tipo</option>
+                                        <option value="Ultrassonografia" {{ 'selected' if estudo.StudyDescription and 'US' in estudo.StudyDescription.upper() }}>Ultrassonografia</option>
+                                        <option value="Radiografia" {{ 'selected' if estudo.StudyDescription and ('RX' in estudo.StudyDescription.upper() or 'RADIOGRAFIA' in estudo.StudyDescription.upper()) }}>Radiografia</option>
+                                        <option value="Tomografia Computadorizada" {{ 'selected' if estudo.StudyDescription and 'CT' in estudo.StudyDescription.upper() }}>Tomografia Computadorizada</option>
+                                        <option value="Ressonância Magnética" {{ 'selected' if estudo.StudyDescription and 'MR' in estudo.StudyDescription.upper() }}>Ressonância Magnética</option>
+                                        <option value="Mamografia" {{ 'selected' if estudo.StudyDescription and 'MG' in estudo.StudyDescription.upper() }}>Mamografia</option>
+                                        <option value="Densitometria Óssea" {{ 'selected' if estudo.StudyDescription and 'DXA' in estudo.StudyDescription.upper() }}>Densitometria Óssea</option>
+                                        <option value="Ecocardiografia">Ecocardiografia</option>
+                                        <option value="Doppler">Doppler</option>
+                                        <option value="Outro">Outro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="descricao" class="form-label">Descrição do Exame</label>
+                                    <input type="text" class="form-control" id="descricao" name="descricao" 
+                                           value="{{ estudo.StudyDescription if estudo.StudyDescription else '' }}"
+                                           placeholder="Descrição adicional do exame">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="observacoes" class="form-label">Observações</label>
+                                    <textarea class="form-control" id="observacoes" name="observacoes" rows="3" 
+                                              placeholder="Observações adicionais sobre o exame"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('assistente.buscar_exames_orthanc') }}" class="btn btn-secondary">
+                                    Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-ultraclin">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Cadastrar Exame
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações do Estudo DICOM -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-server me-2"></i>
+                            Dados do Estudo DICOM
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row">
+                            <dt class="col-sm-5">ID do Estudo:</dt>
+                            <dd class="col-sm-7">
+                                <code class="text-primary">{{ estudo.ID[:12] }}...</code>
+                            </dd>
+
+                            <dt class="col-sm-5">Paciente DICOM:</dt>
+                            <dd class="col-sm-7">
+                                {% if estudo.PatientName and estudo.PatientName != 'Desconhecido' %}
+                                    {{ estudo.PatientName }}
+                                {% else %}
+                                    <span class="text-muted">Nome não informado</span>
+                                {% endif %}
+                            </dd>
+
+                            {% if estudo.PatientID %}
+                            <dt class="col-sm-5">ID do Paciente:</dt>
+                            <dd class="col-sm-7">{{ estudo.PatientID }}</dd>
+                            {% endif %}
+
+                            {% if estudo.StudyDate %}
+                            <dt class="col-sm-5">Data do Estudo:</dt>
+                            <dd class="col-sm-7">
+                                {{ estudo.StudyDate[:4] }}/{{ estudo.StudyDate[4:6] }}/{{ estudo.StudyDate[6:8] }}
+                                {% if estudo.StudyTime %}
+                                <br><small class="text-muted">{{ estudo.StudyTime[:2] }}:{{ estudo.StudyTime[2:4] }}</small>
+                                {% endif %}
+                            </dd>
+                            {% endif %}
+
+                            {% if estudo.StudyDescription %}
+                            <dt class="col-sm-5">Descrição:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-light text-dark">{{ estudo.StudyDescription }}</span>
+                            </dd>
+                            {% endif %}
+
+                            {% if estudo.ReferringPhysicianName %}
+                            <dt class="col-sm-5">Médico:</dt>
+                            <dd class="col-sm-7">{{ estudo.ReferringPhysicianName }}</dd>
+                            {% endif %}
+
+                            {% if estudo.AccessionNumber %}
+                            <dt class="col-sm-5">Número de Acesso:</dt>
+                            <dd class="col-sm-7">{{ estudo.AccessionNumber }}</dd>
+                            {% endif %}
+
+                            <dt class="col-sm-5">Séries:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-info">{{ estudo.SeriesCount }} séries</span>
+                            </dd>
+
+                            <dt class="col-sm-5">Instâncias:</dt>
+                            <dd class="col-sm-7">
+                                <span class="badge bg-secondary">{{ estudo.InstancesCount }} imagens</span>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-eye me-2"></i>
+                            Visualizar Imagens
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-3">Você pode visualizar as imagens antes de cadastrar o exame.</p>
+                        <a href="{{ url_for('assistente.visualizar_imagens', orthanc_study_uid=estudo.ID) }}" 
+                           class="btn btn-outline-info w-100" target="_blank">
+                            <i class="bi bi-camera me-2"></i>
+                            Abrir Visualizador DICOM
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+    .card {
+        border: none;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 0.5rem;
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    code {
+        font-size: 0.875rem;
+    }
+
+    .btn-ultraclin {
+        background-color: #FF7F00;
+        border-color: #FF7F00;
+        color: white;
+    }
+
+    .btn-ultraclin:hover {
+        background-color: #E67300;
+        border-color: #E67300;
+        color: white;
+    }
+
+    .text-ultraclin {
+        color: #FF7F00;
+    }
+
+    dl dt {
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    dl dd {
+        font-size: 0.875rem;
+    }
+    </style>
+    {% endblock %}
+
+    {% block extra_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-selecionar paciente se vier do parâmetro URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const pacienteId = urlParams.get('paciente_id');
+            if (pacienteId) {
+                const selectPaciente = document.getElementById('paciente_id');
+                if (selectPaciente) {
+                    selectPaciente.value = pacienteId;
+                }
+            }
+
+            // Melhorar usabilidade do select de pacientes
+            const selectPaciente = document.getElementById('paciente_id');
+            if (selectPaciente) {
+                selectPaciente.addEventListener('change', function() {
+                    if (this.value) {
+                        this.classList.add('is-valid');
+                        this.classList.remove('is-invalid');
+                    } else {
+                        this.classList.remove('is-valid');
+                    }
+                });
+            }
+
+            // Validação do tipo de exame
+            const selectTipo = document.getElementById('tipo_exame');
+            if (selectTipo) {
+                selectTipo.addEventListener('change', function() {
+                    if (this.value) {
+                        this.classList.add('is-valid');
+                        this.classList.remove('is-invalid');
+                    } else {
+                        this.classList.remove('is-valid');
+                    }
+                });
+            }
+        });
+    </script>
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
