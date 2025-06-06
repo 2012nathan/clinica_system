@@ -50,7 +50,15 @@ SHOSP_API_TOKEN=seu_token_api_shosp
 # Configurações de Segurança
 SECRET_KEY=chave_secreta_para_sessoes
 UPLOAD_FOLDER=/caminho/para/uploads
+
+# Credenciais do Gmail
+GMAIL_CREDENTIALS_PATH=/caminho/seguro/credentials.json
+GMAIL_TOKEN_PATH=/caminho/seguro/token.json
 ```
+
+É recomendável manter os arquivos `credentials.json` e `token.json` fora do
+repositório. Armazene-os em um local seguro e defina as variáveis acima com o
+caminho completo para cada arquivo. Nunca faça commit desses arquivos no Git.
 
 ### Instruções de Instalação
 
