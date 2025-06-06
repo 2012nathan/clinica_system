@@ -39,6 +39,14 @@ from src.routes.assistente import assistente_bp
 from src.routes.paciente import paciente_bp
 from src.routes.api import api_bp
 
+# Importar blueprint main se existir
+try:
+    from src.routes.main import main_bp
+    MAIN_BP_DISPONIVEL = True
+except ImportError:
+    MAIN_BP_DISPONIVEL = False
+    print("⚠️  Blueprint main não encontrado - usando rotas padrão")
+
 # Importar blueprint laboratorio se existir
 try:
     from src.routes.laboratorio import laboratorio_bp
@@ -46,6 +54,23 @@ try:
 except ImportError:
     LABORATORIO_DISPONIVEL = False
     print("⚠️  Blueprint laboratorio não encontrado - recursos de laboratório não disponíveis")
+
+# Importar blueprints de agenda se existirem
+try:
+    from src.routes.assistente_agenda import assistente_agenda_bp
+    ASSISTENTE_AGENDA_DISPONIVEL = True
+    print("✅ Blueprint assistente_agenda carregado com sucesso")
+except ImportError:
+    ASSISTENTE_AGENDA_DISPONIVEL = False
+    print("⚠️  Blueprint assistente_agenda não encontrado")
+
+try:
+    from src.routes.paciente_agenda import paciente_agenda_bp
+    PACIENTE_AGENDA_DISPONIVEL = True
+    print("✅ Blueprint paciente_agenda carregado com sucesso")
+except ImportError:
+    PACIENTE_AGENDA_DISPONIVEL = False
+    print("⚠️  Blueprint paciente_agenda não encontrado")
 
 # Importações dos modelos (importante para migrations)
 from src.models.usuario import Usuario
@@ -58,6 +83,9 @@ from src.models.documento import Documento
 from src.models.exame_imagem import ExameImagem
 from src.models.cartao_gestante import CartaoGestante
 from src.models.disponibilidade import DisponibilidadeProfissional
+
+# Importar text do SQLAlchemy para compatibilidade com 2.0
+from sqlalchemy import text
 
 # Importar exame_laboratorial se existir
 try:
@@ -130,14 +158,29 @@ def create_app(config_name=None):
     
     # Inicializar extensões
     init_extensions(app)
+    print("✅ Extensões inicializadas com sucesso!")
     
-    # Registrar blueprints
+    # Registrar blueprint main se disponível
+    if MAIN_BP_DISPONIVEL:
+        app.register_blueprint(main_bp, url_prefix='/')
+        print("✅ Blueprint main registrado")
+    
+    # Registrar blueprints principais
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(medico_bp, url_prefix='/medico')
     app.register_blueprint(assistente_bp, url_prefix='/assistente')
     app.register_blueprint(paciente_bp, url_prefix='/paciente')
     app.register_blueprint(api_bp, url_prefix='/api')
+    
+    # Registrar blueprints de agenda se disponíveis
+    if ASSISTENTE_AGENDA_DISPONIVEL:
+        app.register_blueprint(assistente_agenda_bp, url_prefix='/assistente/agenda')
+        print("✅ Blueprint assistente_agenda registrado")
+    
+    if PACIENTE_AGENDA_DISPONIVEL:
+        app.register_blueprint(paciente_agenda_bp, url_prefix='/paciente/agenda')
+        print("✅ Blueprint paciente_agenda registrado")
     
     # Registrar blueprint laboratorio se disponível
     if LABORATORIO_DISPONIVEL:
@@ -176,29 +219,30 @@ def create_app(config_name=None):
                 app.logger.debug(f"Request duration: {duration.total_seconds():.3f}s")
         return response
     
-    # Rota principal
-    @app.route('/')
-    def index():
-        """Página inicial - redireciona baseado no status de autenticação"""
-        if 'user_id' in session:
-            # Usuário logado - redirecionar para dashboard apropriado
-            perfil_atual = session.get('perfil_atual', session.get('user_tipo', 'paciente'))
-            
-            if perfil_atual == 'admin':
-                return redirect(url_for('admin.dashboard'))
-            elif perfil_atual == 'medico':
-                return redirect(url_for('medico.dashboard'))
-            elif perfil_atual == 'assistente':
-                return redirect(url_for('assistente.dashboard'))
-            elif perfil_atual == 'paciente':
-                return redirect(url_for('paciente.dashboard'))
+    # Rota principal (apenas se main_bp não estiver disponível)
+    if not MAIN_BP_DISPONIVEL:
+        @app.route('/')
+        def index():
+            """Página inicial - redireciona baseado no status de autenticação"""
+            if 'user_id' in session:
+                # Usuário logado - redirecionar para dashboard apropriado
+                perfil_atual = session.get('perfil_atual', session.get('user_tipo', 'paciente'))
+                
+                if perfil_atual == 'admin':
+                    return redirect(url_for('admin.dashboard'))
+                elif perfil_atual == 'medico':
+                    return redirect(url_for('medico.dashboard'))
+                elif perfil_atual == 'assistente':
+                    return redirect(url_for('assistente.dashboard'))
+                elif perfil_atual == 'paciente':
+                    return redirect(url_for('paciente.dashboard'))
+                else:
+                    # Perfil não reconhecido, voltar ao login
+                    session.clear()
+                    return redirect(url_for('auth.login'))
             else:
-                # Perfil não reconhecido, voltar ao login
-                session.clear()
+                # Usuário não logado - ir para login
                 return redirect(url_for('auth.login'))
-        else:
-            # Usuário não logado - ir para login
-            return redirect(url_for('auth.login'))
     
     # Handlers de erro
     @app.errorhandler(404)
@@ -646,8 +690,9 @@ def create_app(config_name=None):
             return jsonify({'erro': 'Disponível apenas em modo debug'}), 403
         
         try:
-            # Testar conexão básica
-            db.engine.execute('SELECT 1')
+            # Testar conexão básica - CORRIGIDO PARA SQLALCHEMY 2.0
+            result = db.session.execute(text('SELECT 1'))
+            result.scalar()
             
             # Contar registros de usuários
             total_usuarios = Usuario.query.count()
